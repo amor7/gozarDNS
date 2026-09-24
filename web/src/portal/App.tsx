@@ -1,8 +1,8 @@
 import { NavLink, Navigate, Route, Routes, useLocation } from "react-router";
-import { Compass, CreditCard, House, Languages, Moon, Sun, UserRound, type LucideIcon } from "lucide-react";
+import { CloudOff, Compass, CreditCard, House, Languages, Moon, RefreshCw, Sun, UserRound, type LucideIcon } from "lucide-react";
 import { useI18n } from "@shared/i18n";
 import { useTheme } from "@shared/theme";
-import { cn, IconButton, LogoMark, PageLoader } from "@shared/ui";
+import { Button, cn, IconButton, LogoMark, PageLoader } from "@shared/ui";
 import { useInfo, useMe } from "./data";
 import { Welcome } from "./pages/Welcome";
 import { Login, Signup } from "./pages/Auth";
@@ -24,6 +24,7 @@ export function App() {
   const loc = useLocation();
 
   if (me.isLoading || info.isLoading) return <PageLoader />;
+  if (info.isError || me.isError) return <Shell brand={info.data?.brand}><Unreachable onRetry={() => { info.refetch(); me.refetch(); }} /></Shell>;
   const signedIn = !!me.data;
 
   if (!signedIn) {
@@ -49,6 +50,21 @@ export function App() {
         <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
     </Shell>
+  );
+}
+
+/** The gate is up but cannot reach the hub, which holds every account. */
+function Unreachable({ onRetry }: { onRetry: () => void }) {
+  const { t } = useI18n();
+  return (
+    <div className="max-w-md mx-auto pt-16 text-center animate-in">
+      <div className="size-16 mx-auto rounded-2xl bg-warning-soft text-warning grid place-items-center">
+        <CloudOff className="size-8" />
+      </div>
+      <h1 className="text-xl font-extrabold mt-5">{t("down.t")}</h1>
+      <p className="text-muted mt-2 leading-relaxed">{t("down.s")}</p>
+      <Button className="mt-6" onClick={onRetry} icon={<RefreshCw className="size-4" />}>{t("ui.retry")}</Button>
+    </div>
   );
 }
 

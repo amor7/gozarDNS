@@ -92,6 +92,7 @@ type JoinToken struct {
 	HTTPSPort   int    `json:"s,omitempty"`
 	HTTPPort    int    `json:"p,omitempty"`
 	Fingerprint string `json:"f"`
+	SNI         string `json:"n,omitempty"`
 	GateID      string `json:"g"`
 	Secret      string `json:"k"`
 }

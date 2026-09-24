@@ -11,6 +11,9 @@ import (
 
 const DefaultPath = "/etc/gozar/config.json"
 
+// DefaultHubSNI is announced to the hub when the hub has no domain of its own.
+const DefaultHubSNI = "example.com"
+
 type Role string
 
 const (
@@ -45,11 +48,14 @@ type Hub struct {
 
 // Gate is the machine customers point their DNS at.
 type Gate struct {
-	HubAddr        string   `json:"hub_addr"`
-	HubControlPort int      `json:"hub_control_port"`
-	HubHTTPSPort   int      `json:"hub_https_port"`
-	HubHTTPPort    int      `json:"hub_http_port"`
-	Fingerprint    string   `json:"fingerprint"`
+	HubAddr        string `json:"hub_addr"`
+	HubControlPort int    `json:"hub_control_port"`
+	HubHTTPSPort   int    `json:"hub_https_port"`
+	HubHTTPPort    int    `json:"hub_http_port"`
+	Fingerprint    string `json:"fingerprint"`
+	// HubSNI is the server name the gate announces when it talks to the hub.
+	// Nothing checks it; it only has to be present (see certs.PinnedConfig).
+	HubSNI         string   `json:"hub_sni,omitempty"`
 	GateID         string   `json:"gate_id"`
 	Secret         string   `json:"secret"`
 	PublicIP       string   `json:"public_ip"`
@@ -99,6 +105,7 @@ func (c *Config) applyDefaults() {
 		def(&g.HubHTTPSPort, 443)
 		def(&g.HubHTTPPort, 80)
 		def(&g.PortalPort, 8443)
+		defs(&g.HubSNI, DefaultHubSNI)
 		defs(&g.DNSListen, ":53")
 		defs(&g.HTTPSListen, ":443")
 		defs(&g.HTTPListen, ":80")

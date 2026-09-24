@@ -463,7 +463,7 @@ func cmdGate(cfgPath string, a []string) error {
 		}
 		h := cfg.Hub
 		tok := hub.JoinToken(&hub.HubInfo{PublicIP: h.PublicIP, ControlPort: h.ControlPort, HTTPSPort: h.HTTPSPort,
-			HTTPPort: h.HTTPPort, Fingerprint: certs.Fingerprint(ctrl)}, g.ID, secret)
+			HTTPPort: h.HTTPPort, Fingerprint: certs.Fingerprint(ctrl), SNI: h.AdminDomain}, g.ID, secret)
 		st.Log("cli", "gate", "gate_added", name)
 		fmt.Println()
 		fmt.Println("   " + bold("Join token for "+name) + dim(" - run `gozar setup` on the gate and paste it:"))

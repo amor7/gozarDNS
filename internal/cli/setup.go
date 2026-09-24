@@ -143,7 +143,7 @@ func setupHub(cfgPath string) error {
 			return err
 		}
 		token = hub.JoinToken(&hub.HubInfo{PublicIP: h.PublicIP, ControlPort: h.ControlPort, HTTPSPort: h.HTTPSPort,
-			HTTPPort: h.HTTPPort, Fingerprint: certs.Fingerprint(ctrl)}, g.ID, secret)
+			HTTPPort: h.HTTPPort, Fingerprint: certs.Fingerprint(ctrl), SNI: h.AdminDomain}, g.ID, secret)
 	}
 	st.Log("setup", "setup", "hub_configured")
 
@@ -244,6 +244,7 @@ func setupGate(cfgPath string) error {
 		}
 		g.HubAddr, g.HubControlPort, g.Fingerprint, g.GateID, g.Secret = t.Hub, t.ControlPort, t.Fingerprint, t.GateID, t.Secret
 		g.HubHTTPSPort, g.HubHTTPPort = t.HTTPSPort, t.HTTPPort
+		g.HubSNI = t.SNI
 		break
 	}
 	info(dim("contacting the hub..."))
@@ -336,7 +337,7 @@ func setupGate(cfgPath string) error {
 }
 
 func helloHub(g *config.Gate) (string, error) {
-	client := &http.Client{Timeout: 10 * time.Second, Transport: &http.Transport{TLSClientConfig: certs.PinnedConfig(g.Fingerprint)}}
+	client := &http.Client{Timeout: 10 * time.Second, Transport: &http.Transport{TLSClientConfig: certs.PinnedConfig(g.Fingerprint, sniOr(g.HubSNI))}}
 	port := g.HubControlPort
 	if port == 0 {
 		port = 7443
@@ -356,4 +357,11 @@ func helloHub(g *config.Gate) (string, error) {
 		return "", err
 	}
 	return out.Name, nil
+}
+
+func sniOr(s string) string {
+	if s == "" {
+		return config.DefaultHubSNI
+	}
+	return s
 }

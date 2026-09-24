@@ -106,7 +106,7 @@ func (s *Hub) controlSocket() (io.Closer, error) {
 func JoinToken(h *HubInfo, gateID, secret string) string {
 	return proto.JoinToken{
 		Hub: h.PublicIP, ControlPort: h.ControlPort, HTTPSPort: h.HTTPSPort, HTTPPort: h.HTTPPort,
-		Fingerprint: h.Fingerprint, GateID: gateID, Secret: secret,
+		Fingerprint: h.Fingerprint, SNI: h.SNI, GateID: gateID, Secret: secret,
 	}.Encode()
 }
 
@@ -117,9 +117,10 @@ type HubInfo struct {
 	HTTPSPort   int
 	HTTPPort    int
 	Fingerprint string
+	SNI         string // the hub's admin domain, when it has one
 }
 
 func (s *Hub) info() *HubInfo {
 	return &HubInfo{PublicIP: s.h.PublicIP, ControlPort: s.h.ControlPort, HTTPSPort: s.h.HTTPSPort,
-		HTTPPort: s.h.HTTPPort, Fingerprint: s.ControlFingerprint()}
+		HTTPPort: s.h.HTTPPort, Fingerprint: s.ControlFingerprint(), SNI: s.h.AdminDomain}
 }

@@ -274,6 +274,9 @@ const fa = {
   "gates.delete.q": "گیت {name} حذف شود؟",
   "gates.delete.s": "این گیت دیگر نمی‌تواند با هاب همگام شود.",
   "gates.version": "نسخه",
+  "gates.help.never": "این گیت هنوز به هاب وصل نشده.",
+  "gates.help.lost": "ارتباط این گیت با هاب قطع شده.",
+  "gates.help.s": "روی سرور گیت این دستور را بزنید؛ خط sync دلیل را نشان می‌دهد. معمولاً فایروال یا فیلترینگ مسیر ایران به هاب است.",
 
   "act.title": "رویدادها",
   "act.sub": "کارهای مدیرها و مشتری‌ها، به ترتیب زمان.",
@@ -649,6 +652,9 @@ const en: typeof fa = {
   "gates.delete.q": "Delete the gate {name}?",
   "gates.delete.s": "This gate will no longer be able to sync with the hub.",
   "gates.version": "Version",
+  "gates.help.never": "This gate has never reached the hub.",
+  "gates.help.lost": "This gate has lost contact with the hub.",
+  "gates.help.s": "Run this on the gate; the sync line says why. It is usually a firewall, or filtering on the route to the hub.",
 
   "act.title": "Activity",
   "act.sub": "What admins and customers did, newest first.",

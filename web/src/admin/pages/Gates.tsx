@@ -102,6 +102,13 @@ function GateCard({ g, onToken }: { g: Gate; onToken: (t: string) => void }) {
         </Select>
       </div>
       {g.enforce === "auto" && <div className="text-[11px] text-faint mt-1.5">{t("gates.enforce.auto.s")}</div>}
+      {!g.online && (
+        <div className="mt-4 rounded-xl bg-warning-soft text-[13px] p-3 leading-relaxed">
+          <div className="font-bold mb-1">{g.last_seen_at ? t("gates.help.lost") : t("gates.help.never")}</div>
+          {t("gates.help.s")}
+          <code className="block mt-2 ltr text-start text-xs font-mono">sudo gozar status</code>
+        </div>
+      )}
     </Card>
   );
 }

@@ -69,17 +69,22 @@ func New(cfg *config.Config, log *slog.Logger) (*Gate, error) {
 		probes:  dnsd.NewProbes(),
 		sampler: sysmetrics.New(cfg.DataDir),
 		selfIP:  self,
-		hubTLS:  certs.PinnedConfig(g.Fingerprint),
+		hubTLS:  certs.PinnedConfig(g.Fingerprint, g.HubSNI),
 		hubAddr: g.HubAddr,
 		kick:    make(chan struct{}, 1),
 	}
 	gt.hubHTTP = &http.Client{
 		Timeout: 25 * time.Second,
 		Transport: &http.Transport{
-			TLSClientConfig:     gt.hubTLS,
-			MaxIdleConnsPerHost: 4,
-			IdleConnTimeout:     90 * time.Second,
-			ForceAttemptHTTP2:   true,
+			TLSClientConfig: gt.hubTLS,
+			// Fail fast: a customer waiting on the portal should hear that
+			// the hub is unreachable in seconds, not after half a minute.
+			DialContext:           (&net.Dialer{Timeout: 8 * time.Second, KeepAlive: 30 * time.Second}).DialContext,
+			TLSHandshakeTimeout:   10 * time.Second,
+			ResponseHeaderTimeout: 20 * time.Second,
+			MaxIdleConnsPerHost:   4,
+			IdleConnTimeout:       90 * time.Second,
+			ForceAttemptHTTP2:     true,
 		},
 	}
 	gt.dns = &dnsd.Server{

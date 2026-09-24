@@ -90,9 +90,14 @@ func Fingerprint(c tls.Certificate) string {
 
 // PinnedConfig trusts exactly one certificate, by fingerprint, and nothing
 // else - no CA, no hostname. What a gate uses to reach its hub.
-func PinnedConfig(fingerprint string) *tls.Config {
+//
+// serverName is sent as SNI and checked by nobody. It has to be there all the
+// same: filtering inside Iran silently drops TLS handshakes that carry no
+// server name, which is what a connection to a bare IP address sends.
+func PinnedConfig(fingerprint, serverName string) *tls.Config {
 	want := strings.ToLower(fingerprint)
 	return &tls.Config{
+		ServerName:         serverName,
 		InsecureSkipVerify: true, // replaced by the pin check below
 		MinVersion:         tls.VersionTLS12,
 		VerifyPeerCertificate: func(raw [][]byte, _ [][]*x509.Certificate) error {

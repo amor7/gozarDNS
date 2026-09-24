@@ -5,8 +5,10 @@ import (
 	"bytes"
 	"context"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"io"
+	"net"
 	"net/http"
 	"net/netip"
 	"os"
@@ -84,6 +86,10 @@ func (gt *Gate) syncOnce(ctx context.Context, p *pending) (int, error) {
 	hr.Header.Set("Authorization", "Bearer "+gt.g.GateID+"."+gt.g.Secret)
 	resp, err := gt.hubHTTP.Do(hr)
 	if err != nil {
+		var ne net.Error
+		if errors.As(err, &ne) && ne.Timeout() {
+			return 0, fmt.Errorf("the hub at %s did not answer in time - check that this gate can reach it on port %d (%v)", gt.hubAddr, gt.g.HubControlPort, err)
+		}
 		return 0, err
 	}
 	defer resp.Body.Close()

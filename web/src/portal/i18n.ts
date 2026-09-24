@@ -13,6 +13,9 @@ const fa = {
   "ui.back": "بازگشت",
   "ui.retry": "دوباره",
 
+  "down.t": "سرویس موقتاً در دسترس نیست",
+  "down.s": "ارتباط این سرور با سرور اصلی برقرار نیست. چند دقیقهٔ دیگر دوباره امتحان کنید؛ اگر ادامه داشت با پشتیبانی تماس بگیرید.",
+
   "nav.home": "خانه",
   "nav.setup": "راه‌اندازی",
   "nav.plans": "پلن‌ها",
@@ -203,6 +206,9 @@ const en: typeof fa = {
   "ui.close": "Close",
   "ui.back": "Back",
   "ui.retry": "Retry",
+
+  "down.t": "The service is temporarily unavailable",
+  "down.s": "This server can't reach the main server right now. Try again in a few minutes; if it keeps happening, contact support.",
 
   "nav.home": "Home",
   "nav.setup": "Set up",
