@@ -76,8 +76,9 @@ export type Gate = {
   seen_ip: string;
   version: string;
   enforce: "auto" | "on" | "off";
+  tunnel: "on" | "off";
   last_seen_at: number | null;
-  stats: { host?: Sample; stats?: { queries: number; routed: number; refused: number; open_conns: number } };
+  stats: { host?: Sample; stats?: { queries: number; routed: number; refused: number; open_conns: number; tunnel?: "" | "up" | "down" } };
   created_at: number;
   online: boolean;
 };

@@ -19,6 +19,7 @@ type Gate struct {
 	SeenIP     string          `json:"seen_ip"`
 	Version    string          `json:"version"`
 	Enforce    string          `json:"enforce"` // "auto", "on", "off"
+	Tunnel     string          `json:"tunnel"`  // "off" or "on"
 	LastSeenAt *int64          `json:"last_seen_at"`
 	Stats      json.RawMessage `json:"stats"`
 	CreatedAt  int64           `json:"created_at"`
@@ -33,13 +34,13 @@ type GateStatus struct {
 	Stats proto.GateStats   `json:"stats"`
 }
 
-const gateCols = "id, name, secret_hash, public_ip, seen_ip, version, enforce, last_seen_at, stats_json, created_at"
+const gateCols = "id, name, secret_hash, public_ip, seen_ip, version, enforce, last_seen_at, stats_json, created_at, tunnel"
 
 func scanGate(row interface{ Scan(...any) error }) (*Gate, error) {
 	g := &Gate{}
 	var seen sql.NullInt64
 	var stats string
-	err := row.Scan(&g.ID, &g.Name, &g.secretHash, &g.PublicIP, &g.SeenIP, &g.Version, &g.Enforce, &seen, &stats, &g.CreatedAt)
+	err := row.Scan(&g.ID, &g.Name, &g.secretHash, &g.PublicIP, &g.SeenIP, &g.Version, &g.Enforce, &seen, &stats, &g.CreatedAt, &g.Tunnel)
 	if errors.Is(err, sql.ErrNoRows) {
 		return nil, ErrNotFound
 	}
@@ -128,7 +129,16 @@ func constantEq(a, b string) bool {
 	return v == 0
 }
 
-func (s *Store) UpdateGate(id string, name *string, enforce *string) error {
+func (s *Store) UpdateGate(id string, name, enforce, tunnel *string) error {
+	if tunnel != nil {
+		if *tunnel != "on" && *tunnel != "off" {
+			return errors.New("tunnel must be on or off")
+		}
+		if _, err := s.db.Exec("UPDATE gates SET tunnel = ? WHERE id = ?", *tunnel, id); err != nil {
+			return err
+		}
+		s.touch()
+	}
 	if name != nil {
 		if _, err := s.db.Exec("UPDATE gates SET name = ? WHERE id = ?", strings.TrimSpace(*name), id); err != nil {
 			return err

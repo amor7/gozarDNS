@@ -42,6 +42,7 @@ func (s *Hub) controlHandler() http.Handler {
 		return ok(w, map[string]string{"gate": g.ID, "name": g.Name, "hub_version": buildinfo.Version})
 	}))
 	mux.Handle(proto.PathPortal, http.StripPrefix(strings.TrimSuffix(proto.PathPortal, "/"), s.portalHandler()))
+	mux.HandleFunc("POST /v1/tunnel", s.tunnel)
 	mux.HandleFunc("POST /v1/pay/start", s.wrap(s.userOnly(s.payStart)))
 	mux.HandleFunc("POST /v1/pay/ref", s.wrap(s.payRef))
 	mux.HandleFunc("POST /v1/pay/lookup", s.wrap(s.payLookup))

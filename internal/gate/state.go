@@ -22,6 +22,7 @@ type state struct {
 	mu       sync.RWMutex
 	revision string
 	enforce  bool
+	tunnel   bool
 	brand    string
 	clients  map[netip.Addr]*client
 	plans    map[int64]*rules.Set
@@ -77,6 +78,7 @@ func (s *state) apply(rev string, c *proto.GateConfig) {
 	s.mu.Lock()
 	s.revision = rev
 	s.enforce = c.Enforce
+	s.tunnel = c.Tunnel
 	s.brand = c.Brand
 	s.clients = clients
 	s.plans = plans
@@ -222,4 +224,10 @@ func loadCache(path string) (*cached, error) {
 		return nil, err
 	}
 	return &c, nil
+}
+
+func (s *state) useTunnel() bool {
+	s.mu.RLock()
+	defer s.mu.RUnlock()
+	return s.tunnel
 }

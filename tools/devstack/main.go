@@ -68,6 +68,7 @@ func main() {
 		gw = config.Gate{
 			HubAddr: "127.0.0.1", HubControlPort: 17443, HubHTTPSPort: 18443, HubHTTPPort: 18080,
 			Fingerprint: h.ControlFingerprint(), GateID: g.id, Secret: g.secret, PublicIP: "127.0.0.1",
+			HubSNI:     config.DefaultHubSNI,
 			PortalPort: 18843, DNSListen: "127.0.0.1:15353", HTTPSListen: "127.0.0.1:19443", HTTPListen: "127.0.0.1:19080",
 			Upstreams: []string{"1.1.1.1"}, CleanUpstreams: []string{"1.1.1.1"},
 		}

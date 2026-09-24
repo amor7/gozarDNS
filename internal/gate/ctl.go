@@ -27,6 +27,7 @@ type Status struct {
 	LastSync  int64    `json:"last_sync"`
 	SyncError string   `json:"sync_error,omitempty"`
 	Upstreams []string `json:"upstreams"`
+	Tunnel    string   `json:"tunnel,omitempty"`
 }
 
 type CheckResult struct {
@@ -46,6 +47,7 @@ func (gt *Gate) Snapshot() Status {
 		Hub: gt.hubAddr, Portal: gt.portalAddress(), Revision: rev, Enforce: enforce,
 		Clients: clients, Plans: plans, OpenConns: gt.openConns.Load(),
 		LastSync: gt.lastSync.Load(), SyncError: errStr, Upstreams: gt.dns.Upstream.Servers(),
+		Tunnel: gt.tun.status(gt.state.useTunnel()),
 	}
 }
 

@@ -236,6 +236,10 @@ ALTER TABLE payments ADD COLUMN method TEXT NOT NULL DEFAULT 'receipt';
 ALTER TABLE payments ADD COLUMN gateway_ref TEXT NOT NULL DEFAULT '';
 ALTER TABLE payments ADD COLUMN track_id TEXT NOT NULL DEFAULT '';
 `,
+	// 3: the gate-to-hub tunnel, per gate
+	`
+ALTER TABLE gates ADD COLUMN tunnel TEXT NOT NULL DEFAULT 'off';
+`,
 }
 
 func (s *Store) migrate() error {

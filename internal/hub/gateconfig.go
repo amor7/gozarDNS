@@ -99,6 +99,7 @@ func (s *Hub) gateConfig(g *store.Gate) (*proto.GateConfig, string, error) {
 	}
 	sort.Slice(cfg.Clients, func(i, j int) bool { return cfg.Clients[i].IP < cfg.Clients[j].IP })
 
+	cfg.Tunnel = g.Tunnel == "on"
 	switch g.Enforce {
 	case "on":
 		cfg.Enforce = true

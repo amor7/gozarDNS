@@ -855,6 +855,7 @@ func (s *Hub) aUpdateGate(w http.ResponseWriter, r *http.Request, a *store.Admin
 	var in struct {
 		Name    *string `json:"name"`
 		Enforce *string `json:"enforce"`
+		Tunnel  *string `json:"tunnel"`
 	}
 	if err := readJSON(r, &in); err != nil {
 		return err
@@ -863,7 +864,7 @@ func (s *Hub) aUpdateGate(w http.ResponseWriter, r *http.Request, a *store.Admin
 	if _, err := s.store.Gate(id); err != nil {
 		return errNotFound
 	}
-	if err := s.store.UpdateGate(id, in.Name, in.Enforce); err != nil {
+	if err := s.store.UpdateGate(id, in.Name, in.Enforce, in.Tunnel); err != nil {
 		return fail(400, "bad_request", err.Error())
 	}
 	s.store.Log(a.Username, "gate", "gate_updated", id)

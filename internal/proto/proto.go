@@ -28,6 +28,7 @@ const (
 	HeaderClientIP = "X-Gozar-Client-Ip"
 	HeaderGateHost = "X-Gozar-Portal-Host"
 	HeaderGateIP   = "X-Gozar-Gate-Ip"
+	HeaderTarget   = "X-Gozar-Target" // host:port a tunnel stream is for
 )
 
 type SyncRequest struct {
@@ -50,10 +51,11 @@ type Usage struct {
 }
 
 type GateStats struct {
-	Queries   int64 `json:"queries"` // since the previous sync
-	Routed    int64 `json:"routed"`
-	Refused   int64 `json:"refused"`
-	OpenConns int64 `json:"open_conns"`
+	Queries   int64  `json:"queries"` // since the previous sync
+	Routed    int64  `json:"routed"`
+	Refused   int64  `json:"refused"`
+	OpenConns int64  `json:"open_conns"`
+	Tunnel    string `json:"tunnel,omitempty"` // "", "up" or "down"
 }
 
 type SyncResponse struct {
@@ -67,7 +69,10 @@ type GateConfig struct {
 	// Enforce limits DNS and proxying to registered addresses. When false,
 	// everybody is served with the default plan - how a fresh install works
 	// before the first customer exists.
-	Enforce     bool                 `json:"enforce"`
+	Enforce bool `json:"enforce"`
+	// Tunnel carries customer connections to the hub inside one HTTP/2
+	// connection on port 443 instead of one plain TCP connection each.
+	Tunnel      bool                 `json:"tunnel,omitempty"`
 	DefaultPlan int64                `json:"default_plan"`
 	Clients     []Client             `json:"clients"`
 	Plans       map[int64]rules.Spec `json:"plans"`

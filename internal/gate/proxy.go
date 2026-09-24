@@ -61,15 +61,29 @@ func (gt *Gate) carry(c net.Conn, name string, port int) {
 		c.Close()
 		return
 	}
-	up, err := net.DialTimeout("tcp4", net.JoinHostPort(gt.hubAddr, strconv.Itoa(port)), dialTimeout)
-	if err != nil {
-		gt.log.Debug("hub unreachable", "err", err)
-		c.Close()
-		return
+	var up net.Conn
+	var err error
+	if gt.state.useTunnel() {
+		// The stream names the service port, not the port the hub listens on.
+		service := 80
+		if port == gt.g.HubHTTPSPort {
+			service = 443
+		}
+		if up, err = gt.tun.dial(name, service); err != nil {
+			gt.log.Debug("tunnel unavailable, going direct", "name", name, "err", err)
+		}
 	}
-	if tc, ok := up.(*net.TCPConn); ok {
-		_ = tc.SetKeepAlive(true)
-		_ = tc.SetKeepAlivePeriod(30 * time.Second)
+	if up == nil {
+		up, err = net.DialTimeout("tcp4", net.JoinHostPort(gt.hubAddr, strconv.Itoa(port)), dialTimeout)
+		if err != nil {
+			gt.log.Debug("hub unreachable", "err", err)
+			c.Close()
+			return
+		}
+		if tc, ok := up.(*net.TCPConn); ok {
+			_ = tc.SetKeepAlive(true)
+			_ = tc.SetKeepAlivePeriod(30 * time.Second)
+		}
 	}
 
 	var cnt netx.Counter

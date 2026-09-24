@@ -4,7 +4,7 @@ import { KeyRound, Plus, Server, Terminal, Trash2 } from "lucide-react";
 import { api } from "@shared/api";
 import { useI18n } from "@shared/i18n";
 import { bytes, num, rate, relative, uptime } from "@shared/format";
-import { Badge, Button, Card, CopyButton, Empty, Field, IconButton, Input, PageLoader, Select } from "@shared/ui";
+import { Badge, Button, Card, CopyButton, Empty, Field, IconButton, Input, PageLoader, Select, Switch } from "@shared/ui";
 import { Sparkline } from "@shared/charts";
 import { Modal, useConfirm, useToast } from "@shared/overlay";
 import type { Gate } from "../types";
@@ -42,6 +42,15 @@ function GateCard({ g, onToken }: { g: Gate; onToken: (t: string) => void }) {
   const metrics = useQuery({ queryKey: ["metrics", g.id], queryFn: () => api<{ ts: number; rx: number; tx: number }[]>(`/metrics?node=${g.id}&range=24h`) });
   const s = g.stats?.host;
   const st = g.stats?.stats;
+  const tunnelState = st?.tunnel || "";
+  const setTunnel = async (on: boolean) => {
+    try {
+      await api(`/gates/${g.id}`, { method: "PATCH", body: { tunnel: on ? "on" : "off" } });
+      qc.invalidateQueries({ queryKey: ["gates"] });
+    } catch (e) {
+      toast.error(e);
+    }
+  };
   const setEnforce = async (v: string) => {
     try {
       await api(`/gates/${g.id}`, { method: "PATCH", body: { enforce: v } });
@@ -102,6 +111,17 @@ function GateCard({ g, onToken }: { g: Gate; onToken: (t: string) => void }) {
         </Select>
       </div>
       {g.enforce === "auto" && <div className="text-[11px] text-faint mt-1.5">{t("gates.enforce.auto.s")}</div>}
+      <div className="mt-4 pt-4 border-t border-line">
+        <div className="flex items-center justify-between gap-3">
+          <Switch checked={g.tunnel === "on"} onChange={setTunnel} label={<b className="text-sm">{t("gates.tunnel")}</b>} />
+          {g.tunnel === "on" && g.online && (
+            <Badge tone={tunnelState === "up" ? "success" : tunnelState === "down" ? "warning" : "neutral"} dot>
+              {tunnelState === "up" ? t("gates.tunnel.up") : tunnelState === "down" ? t("gates.tunnel.down") : t("gates.tunnel.wait")}
+            </Badge>
+          )}
+        </div>
+        <div className="text-[11px] text-faint mt-1.5 leading-relaxed">{t("gates.tunnel.s")}</div>
+      </div>
       {!g.online && (
         <div className="mt-4 rounded-xl bg-warning-soft text-[13px] p-3 leading-relaxed">
           <div className="font-bold mb-1">{g.last_seen_at ? t("gates.help.lost") : t("gates.help.never")}</div>

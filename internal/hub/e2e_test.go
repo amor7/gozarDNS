@@ -107,7 +107,7 @@ func TestEndToEnd(t *testing.T) {
 	gateCfg := &config.Config{Role: config.RoleGate, DataDir: filepath.Join(dir, "gate"), Gate: &config.Gate{
 		HubAddr: "127.0.0.1", HubControlPort: hubCfg.Hub.ControlPort, HubHTTPSPort: hubCfg.Hub.HTTPSPort,
 		HubHTTPPort: hubCfg.Hub.HTTPPort, Fingerprint: h.ControlFingerprint(), GateID: g.ID, Secret: secret,
-		PublicIP: "127.0.0.1", PortalPort: freePort(t), DNSListen: "127.0.0.1:" + strconv.Itoa(dnsPort),
+		PublicIP: "127.0.0.1", PortalPort: freePort(t), HubSNI: config.DefaultHubSNI, DNSListen: "127.0.0.1:" + strconv.Itoa(dnsPort),
 		HTTPSListen: "127.0.0.1:" + strconv.Itoa(freePort(t)), HTTPListen: "127.0.0.1:" + strconv.Itoa(freePort(t)),
 		Upstreams: []string{"127.0.0.1:1"}, CleanUpstreams: []string{"127.0.0.1:1"},
 	}}
@@ -188,6 +188,34 @@ func TestEndToEnd(t *testing.T) {
 	if len(got) != len(payload) {
 		t.Fatalf("received %d bytes, want %d", len(got), len(payload))
 	}
+
+	// ---- the same through the tunnel
+	tunnelOn := "on"
+	if err := st.UpdateGate(g.ID, nil, nil, &tunnelOn); err != nil {
+		t.Fatal(err)
+	}
+	waitFor(t, func() bool { gw.SyncNow(); return gw.Snapshot().Tunnel != "" })
+	for i := 0; i < 3; i++ { // several streams over one connection
+		tc, err := tls.Dial("tcp", gateCfg.Gate.HTTPSListen, &tls.Config{ServerName: "store.playstation.com", InsecureSkipVerify: true})
+		if err != nil {
+			t.Fatalf("through the tunnel: %v", err)
+		}
+		tc.Write([]byte("hello"))
+		got, _ := io.ReadAll(tc)
+		tc.Close()
+		if len(got) != len(payload) {
+			t.Fatalf("tunnel stream %d: received %d bytes, want %d", i, len(got), len(payload))
+		}
+	}
+	if n := h.tunnelStreams.Load(); n != 3 {
+		t.Fatalf("hub saw %d tunnel streams, want 3", n)
+	}
+	if s := gw.Snapshot().Tunnel; s != "up" {
+		t.Fatalf("tunnel status %q", s)
+	}
+	tunnelOff := "off"
+	_ = st.UpdateGate(g.ID, nil, nil, &tunnelOff)
+	waitFor(t, func() bool { gw.SyncNow(); return gw.Snapshot().Tunnel == "" })
 
 	// A name outside the plan must not be carried.
 	if c, err := tls.Dial("tcp", gateCfg.Gate.HTTPSListen, &tls.Config{ServerName: "example.org", InsecureSkipVerify: true}); err == nil {

@@ -48,6 +48,7 @@ type Gate struct {
 	syncErr   atomic.Value // string
 	hubAddr   string
 	kick      chan struct{}
+	tun       *tunnel
 }
 
 func New(cfg *config.Config, log *slog.Logger) (*Gate, error) {
@@ -106,6 +107,7 @@ func New(cfg *config.Config, log *slog.Logger) (*Gate, error) {
 	}
 	gt.portalCert = certs.NewServer(g.PortalDomain, g.ACMEEmail, filepath.Join(cfg.DataDir, "acme"), fallback)
 	gt.portal = newPortal(gt)
+	gt.tun = newTunnel(gt)
 	return gt, nil
 }
 

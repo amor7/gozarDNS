@@ -49,6 +49,10 @@ type Hub struct {
 	loginThrottle  *auth.Throttle
 	signupThrottle *auth.Throttle
 	openConns      atomic.Int64
+	tunnelStreams  atomic.Int64
+
+	// ctrlL receives gates' tunnel connections, handed over from port 443.
+	ctrlL *netx.ChanListener
 
 	restart chan struct{}
 
@@ -118,6 +122,19 @@ func (s *Hub) Run(ctx context.Context) error {
 	}
 	go func() { fail("control", ctrl.ServeTLS(ctrlL, "", "")) }()
 
+	// The same API on port 443, for gates that tunnel. No read or write
+	// timeouts here: a tunnel stream lasts as long as a download does.
+	ctrlTunnel := &http.Server{
+		Handler:           ctrl.Handler,
+		TLSConfig:         ctrl.TLSConfig.Clone(),
+		ReadHeaderTimeout: 10 * time.Second,
+		IdleTimeout:       5 * time.Minute,
+		HTTP2:             &http.HTTP2Config{MaxConcurrentStreams: 4096, SendPingTimeout: 30 * time.Second, PingTimeout: 15 * time.Second},
+		ErrorLog:          log.New(discard{}, "", 0),
+	}
+	s.ctrlL = netx.NewChanListener(ctrlL.Addr())
+	go func() { fail("control", ctrlTunnel.ServeTLS(s.ctrlL, "", "")) }()
+
 	// Admin console: its own port, and 443 when its domain is asked for.
 	adminH := s.adminHandler()
 	newAdmin := func() *http.Server {
@@ -182,7 +199,8 @@ func (s *Hub) Run(ctx context.Context) error {
 	defer cancel()
 	httpsL.Close()
 	s.adminL.Close()
-	for _, srv := range []*http.Server{ctrl, adminSrv, adminSrv2, plain} {
+	s.ctrlL.Close()
+	for _, srv := range []*http.Server{ctrl, ctrlTunnel, adminSrv, adminSrv2, plain} {
 		_ = srv.Shutdown(sctx)
 	}
 	return runErr

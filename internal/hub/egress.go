@@ -10,6 +10,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/amor7/gozarDNS/internal/config"
 	"github.com/amor7/gozarDNS/internal/netx"
 	"github.com/amor7/gozarDNS/internal/rules"
 )
@@ -42,6 +43,12 @@ func (s *Hub) handleTLS(c net.Conn) {
 	name, pc, err := netx.PeekSNI(c, 10*time.Second)
 	if err != nil {
 		c.Close()
+		return
+	}
+	// A gate opening its tunnel announces the hub's own name: the admin
+	// domain, or the stand-in gates use when the hub has none.
+	if s.isGate(netx.RemoteAddr(c).String()) && (name == config.DefaultHubSNI || (s.h.AdminDomain != "" && name == s.h.AdminDomain)) {
+		s.ctrlL.Push(pc)
 		return
 	}
 	if s.h.AdminDomain != "" && name == s.h.AdminDomain {

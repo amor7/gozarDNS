@@ -231,6 +231,7 @@ func cmdStatus(cfgPath string) error {
 		fmt.Sprintf("customers   %d addresses, %d plans", s.Clients, s.Plans),
 		fmt.Sprintf("connections %d open", s.OpenConns),
 		"upstream    " + strings.Join(s.Upstreams, ", "),
+		"tunnel      " + map[string]string{"": dim("off"), "up": green("up"), "down": red("down - going direct")}[s.Tunnel],
 	})
 	return nil
 }

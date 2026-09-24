@@ -61,6 +61,9 @@ func (gt *Gate) syncLoop(ctx context.Context) {
 
 func (gt *Gate) syncOnce(ctx context.Context, p *pending) (int, error) {
 	rev, _, _, _ := gt.state.info()
+	if gt.state.useTunnel() {
+		gt.tun.check(ctx)
+	}
 	host := gt.sampler.Take()
 	host.Conns = gt.openConns.Load()
 	req := proto.SyncRequest{
@@ -76,6 +79,7 @@ func (gt *Gate) syncOnce(ctx context.Context, p *pending) (int, error) {
 			Routed:    gt.dns.Routed.Swap(0),
 			Refused:   gt.dns.Refused.Swap(0),
 			OpenConns: gt.openConns.Load(),
+			Tunnel:    gt.tun.status(gt.state.useTunnel()),
 		},
 	}
 	body, _ := json.Marshal(req)
