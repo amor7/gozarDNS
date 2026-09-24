@@ -203,84 +203,126 @@ func TestEndToEnd(t *testing.T) {
 		return u.UsedBytes >= int64(len(payload))
 	})
 
-	// ---- online payment through a fake IDPay
-	var verifyCalls int
+	// ---- online payment through fake IDPay, ZarinPal and PayPing
+	verified := map[string]int{}
 	fake := httptest.NewTLSServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		if r.Header.Get("X-API-KEY") != "test-key" {
-			w.WriteHeader(403)
-			return
-		}
 		var in map[string]any
 		json.NewDecoder(r.Body).Decode(&in)
+		reply := func(v any) { json.NewEncoder(w).Encode(v) }
 		switch r.URL.Path {
-		case "/payment":
-			if in["amount"].(float64) != 1500000 { // 150,000 toman in rial
-				t.Errorf("amount sent to IDPay: %v", in["amount"])
+		case "/v1.1/payment":
+			if r.Header.Get("X-API-KEY") != "idpay-key" || in["amount"].(float64) != 1500000 {
+				t.Errorf("idpay create: %v %v", r.Header.Get("X-API-KEY"), in)
 			}
 			w.WriteHeader(201)
-			json.NewEncoder(w).Encode(map[string]string{"id": "pay-abc", "link": "https://idpay.example/p/pay-abc"})
-		case "/payment/verify":
-			verifyCalls++
-			json.NewEncoder(w).Encode(map[string]any{"status": 100, "track_id": "777", "id": "pay-abc", "order_id": in["order_id"], "amount": "1500000"})
+			reply(map[string]string{"id": "idp-1", "link": "https://idpay.test/p/idp-1"})
+		case "/v1.1/payment/verify":
+			verified["idpay"]++
+			reply(map[string]any{"status": 100, "track_id": "777", "id": "idp-1", "order_id": in["order_id"], "amount": "1500000"})
+		case "/zp/pg/v4/payment/request.json":
+			if in["merchant_id"] != "zp-merchant" || in["amount"].(float64) != 1500000 {
+				t.Errorf("zarinpal create: %v", in)
+			}
+			reply(map[string]any{"data": map[string]any{"code": 100, "authority": "A0001"}, "errors": []any{}})
+		case "/zp/pg/v4/payment/verify.json":
+			verified["zarinpal"]++
+			reply(map[string]any{"data": map[string]any{"code": 100, "ref_id": 12345}, "errors": []any{}})
+		case "/pp/pay":
+			if r.Header.Get("Authorization") != "Bearer pp-token" || in["amount"].(float64) != 150000 {
+				t.Errorf("payping create: %v %v", r.Header.Get("Authorization"), in)
+			}
+			reply(map[string]string{"code": "PPCODE"})
+		case "/pp/pay/verify":
+			verified["payping"]++
+			reply(map[string]any{"amount": 150000, "cardNumber": "6037****1234"})
+		default:
+			t.Errorf("unexpected gateway call %s", r.URL.Path)
+			w.WriteHeader(404)
 		}
 	}))
 	defer fake.Close()
-	gate.IDPayBase = fake.URL
-	gate.IDPayClient = fake.Client()
-	_ = st.SetSetting(store.SetIDPayKey, "test-key")
+	gate.IDPayBase = fake.URL + "/v1.1"
+	gate.ZarinpalBase = fake.URL + "/zp"
+	gate.PayPingBase = fake.URL + "/pp"
+	gate.PayClient = fake.Client()
+	_ = st.SetSetting(store.SetIDPayKey, "idpay-key")
+	_ = st.SetSetting(store.SetZarinpalMerchant, "zp-merchant")
+	_ = st.SetSetting(store.SetPayPingToken, "pp-token")
 
-	code, out := call("POST", "/api/pay/online", map[string]int64{"plan_id": plan.ID})
-	if code != 200 || out["link"] != "https://idpay.example/p/pay-abc" {
-		t.Fatalf("pay online: %d %v", code, out)
+	_, info := call("GET", "/api/info", nil)
+	if gws := info["gateways"].([]any); len(gws) != 3 {
+		t.Fatalf("enabled gateways: %v", gws)
 	}
-	pays, _ := st.Payments("", 0, 10)
-	var order int64
-	for _, p := range pays {
-		if p.Method == "idpay" {
-			order = p.ID
-		}
-	}
-	if order != 0 {
-		t.Fatal("an unpaid checkout must not be listed")
-	}
-	before, _ := st.UserByName("sara")
+
 	noFollow := &http.Client{Jar: jar, Transport: web.Transport, CheckRedirect: func(*http.Request, []*http.Request) error { return http.ErrUseLastResponse }}
-	// A forged callback that IDPay would not verify must not credit anything:
-	// here the id does not match the one IDPay issued.
-	form := url.Values{"status": {"10"}, "id": {"forged"}, "order_id": {"gz-1"}, "track_id": {"1"}}
-	resp2, err := noFollow.PostForm(portal+"/api/pay/callback", form)
-	if err != nil {
-		t.Fatal(err)
-	}
-	resp2.Body.Close()
-	if loc := resp2.Header.Get("Location"); loc != "/plans?pay=fail" {
-		t.Fatalf("forged callback redirected to %q", loc)
-	}
-	if verifyCalls != 0 {
-		t.Fatal("a mismatched id must be refused before verifying")
-	}
-	// The real callback.
-	for _, oid := range []string{"gz-1", "gz-1"} { // twice: must count once
-		form = url.Values{"status": {"10"}, "id": {"pay-abc"}, "order_id": {oid}, "track_id": {"555"}}
-		resp2, err = noFollow.PostForm(portal+"/api/pay/callback", form)
+	back := func(method, path string, form url.Values) string {
+		t.Helper()
+		var resp *http.Response
+		var err error
+		if method == "GET" {
+			resp, err = noFollow.Get(portal + path + "&" + form.Encode())
+		} else {
+			resp, err = noFollow.PostForm(portal+path, form)
+		}
 		if err != nil {
 			t.Fatal(err)
 		}
-		resp2.Body.Close()
-		if loc := resp2.Header.Get("Location"); loc != "/plans?pay=ok" {
-			t.Fatalf("callback redirected to %q", loc)
+		resp.Body.Close()
+		return resp.Header.Get("Location")
+	}
+
+	cases := []struct {
+		gw, link, method string
+		form             url.Values
+		track            string
+	}{
+		{"idpay", "https://idpay.test/p/idp-1", "POST", url.Values{"status": {"10"}, "id": {"idp-1"}, "order_id": {"gz-1"}, "track_id": {"555"}}, "777"},
+		{"zarinpal", fake.URL + "/zp/pg/StartPay/A0001", "GET", url.Values{"Authority": {"A0001"}, "Status": {"OK"}}, "12345"},
+		{"payping", fake.URL + "/pp/pay/gotoipg/PPCODE", "POST", url.Values{"refid": {"R1"}, "clientrefid": {"gz-3"}}, "R1"},
+	}
+	for n, c := range cases {
+		order := "gz-" + strconv.Itoa(n+1)
+		code, out := call("POST", "/api/pay/online", map[string]any{"plan_id": plan.ID, "gateway": c.gw})
+		if code != 200 || out["link"] != c.link {
+			t.Fatalf("%s: start: %d %v", c.gw, code, out)
+		}
+		if pays, _ := st.Payments("", 0, 50); len(pays) != n {
+			t.Fatalf("%s: an unpaid checkout must not be listed (%d listed)", c.gw, len(pays))
+		}
+		if c.gw == "idpay" {
+			// A callback naming a payment the gateway never issued is ignored.
+			forged := url.Values{"status": {"10"}, "id": {"forged"}, "order_id": {order}}
+			if loc := back("POST", "/api/pay/callback/idpay?o="+order, forged); loc != "/plans?pay=fail" || verified["idpay"] != 0 {
+				t.Fatalf("forged callback: %q, verified %d", loc, verified["idpay"])
+			}
+		}
+		before, _ := st.UserByName("sara")
+		for i := 0; i < 2; i++ { // twice: must be credited once
+			if loc := back(c.method, "/api/pay/callback/"+c.gw+"?o="+order, c.form); loc != "/plans?pay=ok" {
+				t.Fatalf("%s: callback redirected to %q", c.gw, loc)
+			}
+		}
+		if verified[c.gw] != 1 {
+			t.Fatalf("%s: verified %d times, want 1", c.gw, verified[c.gw])
+		}
+		after, _ := st.UserByName("sara")
+		if *after.ExpiresAt <= *before.ExpiresAt {
+			t.Fatalf("%s: paying did not extend the plan", c.gw)
+		}
+		p, _ := st.Payment(int64(n + 1))
+		if p.Status != store.PayApproved || p.TrackID != c.track || p.Method != c.gw {
+			t.Fatalf("%s: payment after verify: %+v", c.gw, p)
 		}
 	}
-	if verifyCalls != 1 {
-		t.Fatalf("verified %d times, want 1", verifyCalls)
+
+	// A gateway switched off is gone from the page and refused if asked for.
+	_ = st.SetSetting("pay_zarinpal_on", "0")
+	_, info = call("GET", "/api/info", nil)
+	if gws := info["gateways"].([]any); len(gws) != 2 {
+		t.Fatalf("gateways after switching one off: %v", gws)
 	}
-	after, _ := st.UserByName("sara")
-	if *after.ExpiresAt <= *before.ExpiresAt {
-		t.Fatal("paying did not extend the plan")
-	}
-	p2, _ := st.Payment(1)
-	if p2.Status != store.PayApproved || p2.TrackID != "777" {
-		t.Fatalf("payment after verify: %+v", p2)
+	if code, out := call("POST", "/api/pay/online", map[string]any{"plan_id": plan.ID, "gateway": "zarinpal"}); code != 404 || out["error"] != "online_pay_off" {
+		t.Fatalf("disabled gateway: %d %v", code, out)
 	}
 
 	// ---- registering another network's address by hand

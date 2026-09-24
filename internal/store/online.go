@@ -18,15 +18,16 @@ type OnlineOrder struct {
 	ID        int64
 	UserID    int64
 	PlanID    *int64
-	Amount    int64 // in the plan's price unit
+	Amount    int64  // in the plan's price unit
+	Method    string // the gateway: "idpay", "zarinpal", "payping"
 	Status    string
 	Ref       string // the gateway's own id for this payment
 	CreatedAt int64
 }
 
-func (s *Store) StartOnlinePayment(userID int64, planID int64, amount int64) (int64, error) {
+func (s *Store) StartOnlinePayment(userID, planID, amount int64, method string) (int64, error) {
 	res, err := s.db.Exec(`INSERT INTO payments(user_id, plan_id, amount, status, method, created_at)
-		VALUES(?,?,?,?,?,?)`, userID, planID, amount, PayStarted, "idpay", time.Now().Unix())
+		VALUES(?,?,?,?,?,?)`, userID, planID, amount, PayStarted, method, time.Now().Unix())
 	if err != nil {
 		return 0, err
 	}
@@ -36,8 +37,8 @@ func (s *Store) StartOnlinePayment(userID int64, planID int64, amount int64) (in
 func (s *Store) OnlineOrder(id int64) (*OnlineOrder, error) {
 	o := &OnlineOrder{}
 	var plan sql.NullInt64
-	err := s.db.QueryRow(`SELECT id, user_id, plan_id, amount, status, gateway_ref, created_at FROM payments
-		WHERE id = ? AND method = 'idpay'`, id).Scan(&o.ID, &o.UserID, &plan, &o.Amount, &o.Status, &o.Ref, &o.CreatedAt)
+	err := s.db.QueryRow(`SELECT id, user_id, plan_id, amount, method, status, gateway_ref, created_at FROM payments
+		WHERE id = ? AND method != 'receipt'`, id).Scan(&o.ID, &o.UserID, &plan, &o.Amount, &o.Method, &o.Status, &o.Ref, &o.CreatedAt)
 	if errors.Is(err, sql.ErrNoRows) {
 		return nil, ErrNotFound
 	}
@@ -57,8 +58,8 @@ func (s *Store) FinishOnline(id int64, ok bool, trackID, note string) (bool, err
 	if ok {
 		status = PayApproved
 	}
-	res, err := s.db.Exec(`UPDATE payments SET status = ?, track_id = ?, admin_note = ?, decided_at = ?, decided_by = 'idpay'
-		WHERE id = ? AND method = 'idpay' AND status = ?`, status, trackID, note, time.Now().Unix(), id, PayStarted)
+	res, err := s.db.Exec(`UPDATE payments SET status = ?, track_id = ?, admin_note = ?, decided_at = ?, decided_by = method
+		WHERE id = ? AND method != 'receipt' AND status = ?`, status, trackID, note, time.Now().Unix(), id, PayStarted)
 	if err != nil {
 		return false, err
 	}

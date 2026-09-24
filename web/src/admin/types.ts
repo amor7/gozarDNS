@@ -59,7 +59,7 @@ export type Payment = {
   has_receipt: boolean;
   receipt_type: string;
   status: "pending" | "approved" | "rejected" | "failed";
-  method: "receipt" | "idpay";
+  method: "receipt" | "idpay" | "zarinpal" | "payping";
   track_id: string;
   admin_note: string;
   created_at: number;

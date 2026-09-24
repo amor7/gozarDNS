@@ -5,9 +5,10 @@ import { CreditCard, DatabaseBackup, Download, Info, KeyRound, Plus, ShieldCheck
 import { api } from "@shared/api";
 import { useI18n } from "@shared/i18n";
 import { date, latinDigits, relative } from "@shared/format";
-import { Avatar, Badge, Button, Card, CardHeader, Field, IconButton, Input, PageLoader, PasswordInput, Select, Switch, Textarea } from "@shared/ui";
+import { Avatar, Badge, Button, Card, CardHeader, cn, Field, IconButton, Input, PageLoader, PasswordInput, Select, Switch, Textarea } from "@shared/ui";
 import { Modal, useConfirm, useToast } from "@shared/overlay";
 import type { Admin, Plan } from "../types";
+import { gatewayNames } from "@shared/gateways";
 import { KV, PageHeader } from "../components";
 import { useMe } from "../App";
 
@@ -293,23 +294,32 @@ function System({ sys }: { sys: SettingsResp["system"] }) {
   );
 }
 
+const gatewayFields: { id: string; secret: string; sandbox?: string }[] = [
+  { id: "zarinpal", secret: "zarinpal_merchant", sandbox: "zarinpal_sandbox" },
+  { id: "idpay", secret: "idpay_key", sandbox: "idpay_sandbox" },
+  { id: "payping", secret: "payping_token" },
+];
+
 function OnlinePay({ s }: { s: Record<string, string> }) {
-  const { t } = useI18n();
+  const { t, lang } = useI18n();
   const qc = useQueryClient();
   const toast = useToast();
   const confirm = useConfirm();
-  const [key, setKey] = useState("");
-  const [sandbox, setSandbox] = useState(s.idpay_sandbox === "1");
-  const [unit, setUnit] = useState(s.price_unit || "toman");
+  const [f, setF] = useState<Record<string, string>>({});
+  const [secrets, setSecrets] = useState<Record<string, string>>({});
   const [busy, setBusy] = useState(false);
-  const isSet = s.idpay_key_set === "1";
+  const v = (k: string) => (k in f ? f[k] : s[k] || "");
+  const on = (k: string) => v(k) === "1";
+  const toggle = (k: string) => (x: boolean) => setF({ ...f, [k]: x ? "1" : "0" });
+
   const save = async (extra: Record<string, string> = {}) => {
     setBusy(true);
     try {
-      const body: Record<string, string> = { idpay_sandbox: sandbox ? "1" : "0", price_unit: unit, ...extra };
-      if (key.trim()) body.idpay_key = key.trim();
+      const body: Record<string, string> = { ...f, ...extra };
+      for (const [k, val] of Object.entries(secrets)) if (val.trim()) body[k] = val.trim();
       await api("/settings", { method: "PATCH", body });
-      setKey("");
+      setF({});
+      setSecrets({});
       toast.success(t("ui.saved"));
       qc.invalidateQueries({ queryKey: ["settings"] });
     } catch (e) {
@@ -318,29 +328,48 @@ function OnlinePay({ s }: { s: Record<string, string> }) {
       setBusy(false);
     }
   };
+
   return (
     <Card>
-      <CardHeader title={t("set.idpay")} sub={t("set.idpay.sub")} icon={<CreditCard className="size-[18px]" />}
-        action={<Badge tone={isSet ? "success" : "neutral"} dot>{isSet ? t("set.idpay.on") : t("set.idpay.off")}</Badge>} />
-      <div className="px-5 pb-5 space-y-4">
-        <Field label={t("set.idpay.key")} hint={isSet ? t("set.idpay.key.set") : t("set.idpay.key.hint")}>
-          <PasswordInput value={key} onChange={(e) => setKey(e.target.value)} placeholder={isSet ? "••••••••••••" : ""} autoComplete="off" />
-        </Field>
+      <CardHeader title={t("set.pay")} sub={t("set.pay.sub")} icon={<CreditCard className="size-[18px]" />} />
+      <div className="px-5 pb-5 space-y-3">
+        <div className="rounded-2xl border border-line p-4">
+          <Switch checked={on("pay_card")} onChange={toggle("pay_card")} label={<b>{gatewayNames.receipt[lang]}</b>} />
+          <div className="text-xs text-muted mt-2 ms-14">{t("set.pay.card.s")}</div>
+        </div>
+        {gatewayFields.map((g) => {
+          const isSet = s[g.secret + "_set"] === "1";
+          const enabled = on("pay_" + g.id + "_on");
+          return (
+            <div key={g.id} className={cn("rounded-2xl border p-4 space-y-3 transition-colors", isSet && enabled ? "border-primary/40 bg-primary-soft" : "border-line")}>
+              <div className="flex items-center justify-between gap-3">
+                <Switch checked={enabled} onChange={toggle("pay_" + g.id + "_on")} label={<b>{gatewayNames[g.id][lang]}</b>} />
+                <Badge tone={isSet && enabled ? "success" : "neutral"} dot>
+                  {!isSet ? t("set.pay.nokey") : enabled ? t("set.idpay.on") : t("set.idpay.off")}
+                </Badge>
+              </div>
+              <Field label={t("set.pay.key." + g.id)} hint={isSet ? t("set.idpay.key.set") : undefined}>
+                <PasswordInput value={secrets[g.secret] || ""} onChange={(e) => setSecrets({ ...secrets, [g.secret]: e.target.value })} placeholder={isSet ? "••••••••••••" : ""} autoComplete="off" />
+              </Field>
+              <div className="flex flex-wrap items-center justify-between gap-2">
+                {g.sandbox ? <Switch checked={on(g.sandbox)} onChange={toggle(g.sandbox)} label={t("set.idpay.sandbox")} /> : <span />}
+                {isSet && (
+                  <button className="text-xs text-danger font-semibold" onClick={async () => {
+                    if (await confirm({ title: t("set.pay.remove.q", { name: gatewayNames[g.id][lang] }), danger: true })) save({ [g.secret]: "" });
+                  }}>{t("set.idpay.remove")}</button>
+                )}
+              </div>
+            </div>
+          );
+        })}
         <Field label={t("set.idpay.unit")} hint={t("set.idpay.unit.hint")}>
-          <Select value={unit} onChange={(e) => setUnit(e.target.value)}>
+          <Select value={v("price_unit") || "toman"} onChange={(e) => setF({ ...f, price_unit: e.target.value })}>
             <option value="toman">{t("set.idpay.toman")}</option>
             <option value="rial">{t("set.idpay.rial")}</option>
           </Select>
         </Field>
-        <Switch checked={sandbox} onChange={setSandbox} label={t("set.idpay.sandbox")} />
-        <div className="flex flex-wrap gap-2">
-          <Button onClick={() => save()} loading={busy}>{t("ui.save")}</Button>
-          {isSet && (
-            <Button variant="secondary" className="text-danger" onClick={async () => {
-              if (await confirm({ title: t("set.idpay.remove.q"), danger: true })) save({ idpay_key: "" });
-            }}>{t("set.idpay.remove")}</Button>
-          )}
-        </div>
+        <div className="text-xs text-muted leading-relaxed">{t("set.pay.callback")}</div>
+        <Button onClick={() => save()} loading={busy}>{t("ui.save")}</Button>
       </div>
     </Card>
   );

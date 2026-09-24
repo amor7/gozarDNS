@@ -7,6 +7,7 @@ import { bytes, date, money, num, speed } from "@shared/format";
 import { Badge, Button, Card, CardHeader, CopyButton, cn, Empty, Field, Input, Lines, ServiceDot } from "@shared/ui";
 import { Modal, useToast } from "@shared/overlay";
 import { useInfo, useMe, useRefresh } from "../data";
+import { gatewayNames } from "@shared/gateways";
 import type { PublicPlan } from "../types";
 
 export function PlanCard({ plan, currency, current, action }: { plan: PublicPlan; currency: string; current?: boolean; action?: ReactNode }) {
@@ -115,7 +116,7 @@ export function Plans() {
                   <div className="font-semibold text-sm">{p.plan_name || "—"}</div>
                   <div className="text-xs text-muted mt-0.5">
                     {date(p.created_at, lang, true)}
-                    {p.method === "idpay" && " · " + t("pay.online.badge")}
+                    {p.method !== "receipt" && " · " + (gatewayNames[p.method]?.[lang] ?? p.method)}
                     {p.track_id && <span className="ltr"> · #{p.track_id}</span>}
                   </div>
                   {p.admin_note && <div className="text-xs text-muted mt-1">“{p.admin_note}”</div>}
@@ -145,17 +146,18 @@ function PaySheet({ plan, onClose }: { plan: PublicPlan; onClose: () => void }) 
   const [preview, setPreview] = useState<string | null>(null);
   const [note, setNote] = useState("");
   const [busy, setBusy] = useState(false);
-  const [paying, setPaying] = useState(false);
-  const [showReceipt, setShowReceipt] = useState(!info.online_pay);
+  const [paying, setPaying] = useState("");
+  const online = info.gateways || [];
+  const [showReceipt, setShowReceipt] = useState(online.length === 0 && info.card_pay);
 
-  const payOnline = async () => {
-    setPaying(true);
+  const payOnline = async (gateway: string) => {
+    setPaying(gateway);
     try {
-      const r = await api<{ link: string }>("/pay/online", { body: { plan_id: plan.id } });
+      const r = await api<{ link: string }>("/pay/online", { body: { plan_id: plan.id, gateway } });
       window.location.href = r.link;
     } catch (e) {
       toast.error(e);
-      setPaying(false);
+      setPaying("");
     }
   };
 
@@ -188,31 +190,40 @@ function PaySheet({ plan, onClose }: { plan: PublicPlan; onClose: () => void }) 
   return (
     <Modal open onClose={onClose} title={t("pay.title", { plan: plan.name })}
       footer={showReceipt ? <><Button variant="secondary" onClick={onClose}>{t("ui.cancel")}</Button><Button onClick={send} loading={busy} disabled={!file}>{t("pay.send")}</Button></> : undefined}>
-      {info.online_pay && (
+      {online.length > 0 && (
         <div className="mb-5">
           <div className="rounded-2xl gradient-bg text-white p-5 relative overflow-hidden">
             <div className="absolute -top-10 -end-10 size-32 rounded-full bg-white/10" />
             <div className="text-sm text-white/80">{t("pay.amount")}</div>
             <div className="text-3xl font-black num mt-1">{money(plan.price, lang, info.currency)}</div>
-            <button
-              onClick={payOnline}
-              disabled={paying}
-              className="mt-4 w-full h-12 rounded-xl bg-white text-[#3b2bb3] font-bold flex items-center justify-center gap-2 hover:brightness-95 active:scale-[0.98] transition disabled:opacity-70"
-            >
-              <CreditCard className="size-5" />
-              {paying ? "…" : t("pay.online")}
-            </button>
+            <div className="text-sm text-white/90 font-semibold mt-4 mb-2">{online.length > 1 ? t("pay.online.choose") : t("pay.online")}</div>
+            <div className="space-y-2">
+              {online.map((g) => (
+                <button
+                  key={g}
+                  onClick={() => payOnline(g)}
+                  disabled={!!paying}
+                  className="w-full h-12 rounded-xl bg-white text-[#3b2bb3] font-bold flex items-center justify-center gap-2 hover:brightness-95 active:scale-[0.98] transition disabled:opacity-70"
+                >
+                  <CreditCard className="size-5" />
+                  {paying === g ? "…" : t("pay.via", { name: gatewayNames[g]?.[lang] ?? g })}
+                </button>
+              ))}
+            </div>
             <div className="flex items-center justify-center gap-1.5 text-xs text-white/80 mt-3">
               <ShieldCheck className="size-3.5" />
               {t("pay.online.sub")}
             </div>
           </div>
-          {!showReceipt && (
+          {info.card_pay && !showReceipt && (
             <button className="w-full text-center text-sm text-muted hover:text-fg mt-4" onClick={() => setShowReceipt(true)}>
               {t("pay.or.receipt")}
             </button>
           )}
         </div>
+      )}
+      {online.length === 0 && !info.card_pay && (
+        <div className="text-sm text-muted text-center py-6">{t("pay.none")}</div>
       )}
       {showReceipt && (
       <div className="space-y-5">

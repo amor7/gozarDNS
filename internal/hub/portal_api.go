@@ -155,7 +155,8 @@ func (s *Hub) pInfo(w http.ResponseWriter, r *http.Request) error {
 		"currency":     set[store.SetCurrency],
 		"payment_info": set[store.SetPaymentInfo],
 		"signup_open":  set[store.SetSignupOpen] == "1",
-		"online_pay":   set[store.SetIDPayKey] != "",
+		"gateways":     s.enabledGateways(set),
+		"card_pay":     set[store.SetCardPay] == "1",
 		"dns":          s.dnsAddress(r),
 		"your_ip":      clientAddr(r).String(),
 		"plans":        pub,
@@ -449,6 +450,9 @@ var receiptTypes = map[string]bool{
 }
 
 func (s *Hub) pPayment(w http.ResponseWriter, r *http.Request, u *store.User) error {
+	if s.store.Setting(store.SetCardPay) != "1" {
+		return fail(403, "card_pay_off", "card transfer is not accepted")
+	}
 	r.Body = http.MaxBytesReader(w, r.Body, maxReceipt+64<<10)
 	if err := r.ParseMultipartForm(maxReceipt + 32<<10); err != nil {
 		var mbe *http.MaxBytesError

@@ -270,18 +270,22 @@ func SchemaVersion() int { return len(migrations) }
 
 // Setting keys. Values are strings; typed accessors live on the callers.
 const (
-	SetBrand         = "brand"
-	SetSupport       = "support"        // how customers reach the operator
-	SetPaymentInfo   = "payment_info"   // card number, account holder, etc.
-	SetSignupOpen    = "signup_open"    // "1" or "0"
-	SetSignupPlan    = "signup_plan"    // plan id a new account starts on, "0" for none
-	SetNotice        = "notice"         // announcement at the top of every customer page
-	SetCurrency      = "currency"       // label shown next to prices
-	SetDisabledRules = "disabled_rules" // JSON list of built-in rule ids switched off
-	SetDNSAddress    = "dns_address"    // override for the DNS address customers are shown
-	SetIDPayKey      = "idpay_key"      // IDPay API key; empty turns online payment off
-	SetIDPaySandbox  = "idpay_sandbox"  // "1": IDPay's test mode, no real money moves
-	SetPriceUnit     = "price_unit"     // "toman" or "rial": what plan prices are written in
+	SetBrand            = "brand"
+	SetSupport          = "support"           // how customers reach the operator
+	SetPaymentInfo      = "payment_info"      // card number, account holder, etc.
+	SetSignupOpen       = "signup_open"       // "1" or "0"
+	SetSignupPlan       = "signup_plan"       // plan id a new account starts on, "0" for none
+	SetNotice           = "notice"            // announcement at the top of every customer page
+	SetCurrency         = "currency"          // label shown next to prices
+	SetDisabledRules    = "disabled_rules"    // JSON list of built-in rule ids switched off
+	SetDNSAddress       = "dns_address"       // override for the DNS address customers are shown
+	SetCardPay          = "pay_card"          // "1": customers may pay by card transfer and send a receipt
+	SetIDPayKey         = "idpay_key"         // IDPay API key
+	SetIDPaySandbox     = "idpay_sandbox"     // "1": IDPay's test mode, no real money moves
+	SetZarinpalMerchant = "zarinpal_merchant" // ZarinPal merchant id
+	SetZarinpalSandbox  = "zarinpal_sandbox"  // "1": ZarinPal's sandbox
+	SetPayPingToken     = "payping_token"     // PayPing API token
+	SetPriceUnit        = "price_unit"        // "toman" or "rial": what plan prices are written in
 )
 
 var settingDefaults = map[string]string{
@@ -291,6 +295,11 @@ var settingDefaults = map[string]string{
 	SetCurrency:      "تومان",
 	SetDisabledRules: "[]",
 	SetPriceUnit:     "toman",
+	SetCardPay:       "1",
+	// Each gateway is on once it has a credential, until switched off.
+	"pay_idpay_on":    "1",
+	"pay_zarinpal_on": "1",
+	"pay_payping_on":  "1",
 }
 
 func (s *Store) Setting(key string) string {

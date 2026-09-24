@@ -8,6 +8,7 @@ import { date, num, relative } from "@shared/format";
 import { Avatar, Badge, Button, Card, cn, Empty, Field, Input, PageLoader, Segmented } from "@shared/ui";
 import { Modal, useToast } from "@shared/overlay";
 import type { Payment } from "../types";
+import { gatewayNames } from "@shared/gateways";
 import { PageHeader } from "../components";
 
 type Tab = "pending" | "approved" | "rejected" | "";
@@ -37,10 +38,10 @@ export function Payments() {
           {q.data.map((p) => (
             <Card key={p.id} className="overflow-hidden flex flex-col animate-in">
               <button onClick={() => setOpen(p)} className="relative h-44 bg-surface-2 border-b border-line grid place-items-center overflow-hidden group">
-                {p.method === "idpay" ? (
+                {p.method !== "receipt" ? (
                   <div className="flex flex-col items-center gap-2 text-primary">
                     <CreditCard className="size-10" />
-                    <span className="text-sm font-bold">{t("pay.online")}</span>
+                    <span className="text-sm font-bold">{gatewayNames[p.method]?.[lang] ?? p.method}</span>
                     {p.track_id && <span className="text-xs text-muted ltr">#{p.track_id}</span>}
                   </div>
                 ) : p.has_receipt && p.receipt_type.startsWith("image/") ? (

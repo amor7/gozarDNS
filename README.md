@@ -45,7 +45,7 @@ Everything — DNS server, proxy, speed limiting, usage accounting, STUN, certif
 |---|---|
 | **Customer portal** | Sign-up, one-tap device registration, usage ring and daily chart, register this connection in one tap or another network's address by hand (a console at home), per-device setup guides (PS5, Xbox, Switch, Android, iPhone, Windows, macOS, router), a live *“is my DNS set up?”* test |
 | **Admin console** | Live dashboard, customers with search / filters / Ctrl-K palette, plan editor with a visual service picker, receipt review, gate health, activity log, backup and restore |
-| **Payments** | Online through IDPay — verified from the gate inside Iran, plan renewed the moment the bank confirms — or card transfer with a photo of the receipt for you to approve |
+| **Payments** | ZarinPal, IDPay and PayPing — each switched on or off on its own, verified from the gate inside Iran, plan renewed the moment the bank confirms — and/or card transfer with a photo of the receipt for you to approve |
 | **Plans** | Price, data quota, duration, speed cap, device limit, and exactly which services are routed — down to single domains |
 | **Accounting** | Per-customer byte counting in the proxy itself, idempotent sync, daily history, automatic expiry and period reset |
 | **Speed caps** | Paced, not dropped: capped downloads run smoothly, just slower |

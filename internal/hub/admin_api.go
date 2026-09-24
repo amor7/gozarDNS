@@ -883,7 +883,12 @@ func (s *Hub) aDeleteGate(w http.ResponseWriter, r *http.Request, a *store.Admin
 // ---------------------------------------------------------------- settings
 
 var editableSettings = []string{store.SetBrand, store.SetSupport, store.SetPaymentInfo, store.SetSignupOpen,
-	store.SetSignupPlan, store.SetNotice, store.SetCurrency, store.SetDNSAddress, store.SetIDPaySandbox, store.SetPriceUnit}
+	store.SetSignupPlan, store.SetNotice, store.SetCurrency, store.SetDNSAddress, store.SetIDPaySandbox, store.SetPriceUnit,
+	store.SetCardPay, store.SetZarinpalSandbox, "pay_idpay_on", "pay_zarinpal_on", "pay_payping_on"}
+
+// secretSettings are write-only: the console can set or clear them, and learns
+// only whether one is set.
+var secretSettings = []string{store.SetIDPayKey, store.SetZarinpalMerchant, store.SetPayPingToken}
 
 func (s *Hub) aSettings(w http.ResponseWriter, r *http.Request, a *store.Admin) error {
 	all := s.store.Settings()
@@ -892,8 +897,10 @@ func (s *Hub) aSettings(w http.ResponseWriter, r *http.Request, a *store.Admin) 
 		out[k] = all[k]
 	}
 	// The key is write-only: the console learns whether one is set, never what.
-	if all[store.SetIDPayKey] != "" {
-		out["idpay_key_set"] = "1"
+	for _, k := range secretSettings {
+		if all[k] != "" {
+			out[k+"_set"] = "1"
+		}
 	}
 	issued, until := s.adminCert.Status()
 	var certUntil int64
@@ -915,12 +922,16 @@ func (s *Hub) aUpdateSettings(w http.ResponseWriter, r *http.Request, a *store.A
 	if err := readJSON(r, &in); err != nil {
 		return err
 	}
-	if key, set := in[store.SetIDPayKey]; set {
-		key = strings.TrimSpace(key)
-		if len(key) > 200 || strings.IndexFunc(key, unicode.IsSpace) >= 0 {
-			return fail(400, "bad_request", "that does not look like an API key")
+	for _, k := range secretSettings {
+		v, set := in[k]
+		if !set {
+			continue
 		}
-		if err := s.store.SetSetting(store.SetIDPayKey, key); err != nil {
+		v = strings.TrimSpace(v)
+		if len(v) > 300 || strings.IndexFunc(v, unicode.IsSpace) >= 0 {
+			return fail(400, "bad_request", "that does not look like a gateway key")
+		}
+		if err := s.store.SetSetting(k, v); err != nil {
 			return err
 		}
 	}
@@ -930,7 +941,8 @@ func (s *Hub) aUpdateSettings(w http.ResponseWriter, r *http.Request, a *store.A
 		}
 		v = strings.TrimSpace(v)
 		switch k {
-		case store.SetSignupOpen, store.SetIDPaySandbox:
+		case store.SetSignupOpen, store.SetIDPaySandbox, store.SetZarinpalSandbox, store.SetCardPay,
+			"pay_idpay_on", "pay_zarinpal_on", "pay_payping_on":
 			if v != "1" {
 				v = "0"
 			}
