@@ -163,8 +163,8 @@ export function PasswordInput(props: InputHTMLAttributes<HTMLInputElement>) {
   const { t } = useI18n();
   return (
     <div className="relative">
-      <Input {...props} type={show ? "text" : "password"} ltr className="pe-11" />
-      <button type="button" onClick={() => setShow(!show)} className="absolute inset-y-0 end-0 px-3 text-faint hover:text-fg" aria-label={t(show ? "ui.hide" : "ui.show")}>
+      <Input {...props} type={show ? "text" : "password"} ltr className="pr-11" />
+      <button type="button" onClick={() => setShow(!show)} className="absolute inset-y-0 right-0 px-3 text-faint hover:text-fg" aria-label={t(show ? "ui.hide" : "ui.show")}>
         {show ? <EyeOff className="size-4" /> : <Eye className="size-4" />}
       </button>
     </div>

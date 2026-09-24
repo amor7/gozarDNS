@@ -25,9 +25,8 @@ function stored(): Lang | null {
 function initial(): Lang {
   const s = stored();
   if (s) return s;
-  // Persian unless the browser clearly prefers something else.
-  const nav = (navigator.language || "fa").toLowerCase();
-  return nav.startsWith("en") ? "en" : "fa";
+  // Persian until someone chooses English themselves.
+  return "fa";
 }
 
 export function I18nProvider({ dicts, children }: { dicts: Dicts; children: ReactNode }) {
