@@ -3,7 +3,7 @@ package store
 import (
 	"time"
 
-	"github.com/amor7/gozar/internal/sysmetrics"
+	"github.com/amor7/gozarDNS/internal/sysmetrics"
 )
 
 func (s *Store) RecordMetrics(node string, m sysmetrics.Sample) {

@@ -14,12 +14,12 @@ import (
 	"strings"
 	"time"
 
-	"github.com/amor7/gozar/internal/auth"
-	"github.com/amor7/gozar/internal/buildinfo"
-	"github.com/amor7/gozar/internal/catalog"
-	"github.com/amor7/gozar/internal/rules"
-	"github.com/amor7/gozar/internal/store"
-	"github.com/amor7/gozar/internal/web"
+	"github.com/amor7/gozarDNS/internal/auth"
+	"github.com/amor7/gozarDNS/internal/buildinfo"
+	"github.com/amor7/gozarDNS/internal/catalog"
+	"github.com/amor7/gozarDNS/internal/rules"
+	"github.com/amor7/gozarDNS/internal/store"
+	"github.com/amor7/gozarDNS/internal/web"
 )
 
 const adminCookie = "gz_a"

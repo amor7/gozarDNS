@@ -21,15 +21,15 @@ import (
 	"syscall"
 	"time"
 
-	"github.com/amor7/gozar/internal/auth"
-	"github.com/amor7/gozar/internal/buildinfo"
-	"github.com/amor7/gozar/internal/certs"
-	"github.com/amor7/gozar/internal/config"
-	"github.com/amor7/gozar/internal/ctl"
-	"github.com/amor7/gozar/internal/dnsd"
-	"github.com/amor7/gozar/internal/gate"
-	"github.com/amor7/gozar/internal/hub"
-	"github.com/amor7/gozar/internal/store"
+	"github.com/amor7/gozarDNS/internal/auth"
+	"github.com/amor7/gozarDNS/internal/buildinfo"
+	"github.com/amor7/gozarDNS/internal/certs"
+	"github.com/amor7/gozarDNS/internal/config"
+	"github.com/amor7/gozarDNS/internal/ctl"
+	"github.com/amor7/gozarDNS/internal/dnsd"
+	"github.com/amor7/gozarDNS/internal/gate"
+	"github.com/amor7/gozarDNS/internal/hub"
+	"github.com/amor7/gozarDNS/internal/store"
 )
 
 const usage = `Gozar - smart DNS gateway

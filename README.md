@@ -74,7 +74,7 @@ You need two Linux servers (Debian/Ubuntu or anything with systemd), each with a
 **1. On the hub:**
 
 ```bash
-curl -fsSL https://raw.githubusercontent.com/amor7/gozar/main/install.sh | sudo bash
+curl -fsSL https://raw.githubusercontent.com/amor7/gozarDNS/main/install.sh | sudo bash
 ```
 
 Choose **Hub**. The wizard asks for an optional domain for the console, then prints the console address, the admin password (once) and a **join token** for your first gate.

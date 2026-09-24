@@ -10,10 +10,10 @@ import (
 	"strings"
 	"time"
 
-	"github.com/amor7/gozar/internal/auth"
-	"github.com/amor7/gozar/internal/catalog"
-	"github.com/amor7/gozar/internal/proto"
-	"github.com/amor7/gozar/internal/store"
+	"github.com/amor7/gozarDNS/internal/auth"
+	"github.com/amor7/gozarDNS/internal/catalog"
+	"github.com/amor7/gozarDNS/internal/proto"
+	"github.com/amor7/gozarDNS/internal/store"
 )
 
 const userCookie = "gz_s"

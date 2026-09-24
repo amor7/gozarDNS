@@ -15,8 +15,8 @@ import (
 	"github.com/miekg/dns"
 	"golang.org/x/time/rate"
 
-	"github.com/amor7/gozar/internal/resolver"
-	"github.com/amor7/gozar/internal/rules"
+	"github.com/amor7/gozarDNS/internal/resolver"
+	"github.com/amor7/gozarDNS/internal/rules"
 )
 
 // Decision is what the gate knows about whoever is asking.

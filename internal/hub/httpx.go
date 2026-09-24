@@ -9,7 +9,7 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/amor7/gozar/internal/web"
+	"github.com/amor7/gozarDNS/internal/web"
 )
 
 // apiError carries a stable code the web apps translate, plus an English

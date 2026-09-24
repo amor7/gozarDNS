@@ -19,11 +19,11 @@ import (
 
 	"github.com/miekg/dns"
 
-	"github.com/amor7/gozar/internal/certs"
-	"github.com/amor7/gozar/internal/config"
-	"github.com/amor7/gozar/internal/ctl"
-	"github.com/amor7/gozar/internal/gate"
-	"github.com/amor7/gozar/internal/store"
+	"github.com/amor7/gozarDNS/internal/certs"
+	"github.com/amor7/gozarDNS/internal/config"
+	"github.com/amor7/gozarDNS/internal/ctl"
+	"github.com/amor7/gozarDNS/internal/gate"
+	"github.com/amor7/gozarDNS/internal/store"
 )
 
 func freePort(t *testing.T) int {

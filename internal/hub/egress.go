@@ -10,8 +10,8 @@ import (
 	"strings"
 	"time"
 
-	"github.com/amor7/gozar/internal/netx"
-	"github.com/amor7/gozar/internal/rules"
+	"github.com/amor7/gozarDNS/internal/netx"
+	"github.com/amor7/gozarDNS/internal/rules"
 )
 
 // googleSuffixes leave over IPv6 when the hub has it. Google refuses Gemini,

@@ -6,7 +6,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/amor7/gozar/internal/proto"
+	"github.com/amor7/gozarDNS/internal/proto"
 )
 
 func open(t *testing.T) *Store {

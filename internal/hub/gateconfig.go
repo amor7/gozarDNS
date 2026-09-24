@@ -7,10 +7,10 @@ import (
 	"slices"
 	"sort"
 
-	"github.com/amor7/gozar/internal/catalog"
-	"github.com/amor7/gozar/internal/proto"
-	"github.com/amor7/gozar/internal/rules"
-	"github.com/amor7/gozar/internal/store"
+	"github.com/amor7/gozarDNS/internal/catalog"
+	"github.com/amor7/gozarDNS/internal/proto"
+	"github.com/amor7/gozarDNS/internal/rules"
+	"github.com/amor7/gozarDNS/internal/store"
 )
 
 // CustomGroup is the pseudo-group that holds the operator's own domains. A

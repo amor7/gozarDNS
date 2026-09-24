@@ -1,4 +1,4 @@
-module github.com/amor7/gozar
+module github.com/amor7/gozarDNS
 
 go 1.27.1
 

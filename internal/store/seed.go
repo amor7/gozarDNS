@@ -1,7 +1,7 @@
 package store
 
 import (
-	"github.com/amor7/gozar/internal/sysmetrics"
+	"github.com/amor7/gozarDNS/internal/sysmetrics"
 )
 
 // Seeding helpers: they write history directly, for the development stack

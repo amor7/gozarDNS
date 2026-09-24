@@ -10,10 +10,10 @@ import (
 
 	"golang.org/x/time/rate"
 
-	"github.com/amor7/gozar/internal/dnsd"
-	"github.com/amor7/gozar/internal/netx"
-	"github.com/amor7/gozar/internal/proto"
-	"github.com/amor7/gozar/internal/rules"
+	"github.com/amor7/gozarDNS/internal/dnsd"
+	"github.com/amor7/gozarDNS/internal/netx"
+	"github.com/amor7/gozarDNS/internal/proto"
+	"github.com/amor7/gozarDNS/internal/rules"
 )
 
 // state is what the gate currently believes, rebuilt whole from each new

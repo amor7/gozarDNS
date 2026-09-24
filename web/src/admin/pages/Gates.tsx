@@ -10,7 +10,7 @@ import { Modal, useConfirm, useToast } from "@shared/overlay";
 import type { Gate } from "../types";
 import { Meter, PageHeader } from "../components";
 
-const INSTALL = "curl -fsSL https://raw.githubusercontent.com/amor7/gozar/main/install.sh | sudo bash";
+const INSTALL = "curl -fsSL https://raw.githubusercontent.com/amor7/gozarDNS/main/install.sh | sudo bash";
 
 export function Gates() {
   const { t } = useI18n();

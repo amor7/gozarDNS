@@ -9,8 +9,8 @@ import (
 
 	"github.com/miekg/dns"
 
-	"github.com/amor7/gozar/internal/resolver"
-	"github.com/amor7/gozar/internal/rules"
+	"github.com/amor7/gozarDNS/internal/resolver"
+	"github.com/amor7/gozarDNS/internal/rules"
 )
 
 // fakeUpstream answers every A query with 93.184.216.34 and every AAAA with

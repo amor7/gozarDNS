@@ -18,14 +18,14 @@ import (
 	"sync/atomic"
 	"time"
 
-	"github.com/amor7/gozar/internal/auth"
-	"github.com/amor7/gozar/internal/catalog"
-	"github.com/amor7/gozar/internal/certs"
-	"github.com/amor7/gozar/internal/config"
-	"github.com/amor7/gozar/internal/netx"
-	"github.com/amor7/gozar/internal/resolver"
-	"github.com/amor7/gozar/internal/store"
-	"github.com/amor7/gozar/internal/sysmetrics"
+	"github.com/amor7/gozarDNS/internal/auth"
+	"github.com/amor7/gozarDNS/internal/catalog"
+	"github.com/amor7/gozarDNS/internal/certs"
+	"github.com/amor7/gozarDNS/internal/config"
+	"github.com/amor7/gozarDNS/internal/netx"
+	"github.com/amor7/gozarDNS/internal/resolver"
+	"github.com/amor7/gozarDNS/internal/store"
+	"github.com/amor7/gozarDNS/internal/sysmetrics"
 )
 
 type Hub struct {

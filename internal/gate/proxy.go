@@ -5,8 +5,8 @@ import (
 	"strconv"
 	"time"
 
-	"github.com/amor7/gozar/internal/netx"
-	"github.com/amor7/gozar/internal/rules"
+	"github.com/amor7/gozarDNS/internal/netx"
+	"github.com/amor7/gozarDNS/internal/rules"
 )
 
 const (

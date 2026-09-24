@@ -5,7 +5,7 @@ package main
 import (
 	"os"
 
-	"github.com/amor7/gozar/internal/cli"
+	"github.com/amor7/gozarDNS/internal/cli"
 )
 
 func main() {

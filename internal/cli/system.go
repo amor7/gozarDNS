@@ -23,7 +23,7 @@ const (
 
 const unitFile = `[Unit]
 Description=Gozar %s
-Documentation=https://github.com/amor7/gozar
+Documentation=https://github.com/amor7/gozarDNS
 After=network-online.target
 Wants=network-online.target
 

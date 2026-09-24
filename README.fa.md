@@ -85,7 +85,7 @@
 </div>
 
 ```bash
-curl -fsSL https://raw.githubusercontent.com/amor7/gozar/main/install.sh | sudo bash
+curl -fsSL https://raw.githubusercontent.com/amor7/gozarDNS/main/install.sh | sudo bash
 ```
 
 <div dir="rtl">

@@ -11,8 +11,8 @@ import (
 	"strings"
 	"time"
 
-	"github.com/amor7/gozar/internal/proto"
-	"github.com/amor7/gozar/internal/web"
+	"github.com/amor7/gozarDNS/internal/proto"
+	"github.com/amor7/gozarDNS/internal/web"
 )
 
 // portal serves the customer's web app. The pages come from this binary;

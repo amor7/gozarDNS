@@ -7,9 +7,9 @@ import (
 	"strings"
 	"time"
 
-	"github.com/amor7/gozar/internal/auth"
-	"github.com/amor7/gozar/internal/proto"
-	"github.com/amor7/gozar/internal/sysmetrics"
+	"github.com/amor7/gozarDNS/internal/auth"
+	"github.com/amor7/gozarDNS/internal/proto"
+	"github.com/amor7/gozarDNS/internal/sysmetrics"
 )
 
 type Gate struct {

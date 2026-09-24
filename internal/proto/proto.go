@@ -11,8 +11,8 @@ import (
 	"errors"
 	"strings"
 
-	"github.com/amor7/gozar/internal/rules"
-	"github.com/amor7/gozar/internal/sysmetrics"
+	"github.com/amor7/gozarDNS/internal/rules"
+	"github.com/amor7/gozarDNS/internal/sysmetrics"
 )
 
 // Paths on the hub's control port.

@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 # Gozar installer.
 #
-#   curl -fsSL https://raw.githubusercontent.com/amor7/gozar/main/install.sh | sudo bash
+#   curl -fsSL https://raw.githubusercontent.com/amor7/gozarDNS/main/install.sh | sudo bash
 #
 # Downloads the gozar binary for this machine, checks it against the release's
 # checksums, puts it in /usr/local/bin and starts the setup wizard. Nothing
@@ -15,7 +15,7 @@
 #   GOZAR_BINARY=/path/file   install a binary you already downloaded
 set -euo pipefail
 
-REPO="amor7/gozar"
+REPO="amor7/gozarDNS"
 BIN=/usr/local/bin/gozar
 
 c() { [ -t 1 ] && printf '\033[%sm' "$1" || true; }

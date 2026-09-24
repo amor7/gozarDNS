@@ -1,5 +1,5 @@
 VERSION ?= $(shell git describe --tags --always --dirty 2>/dev/null || echo dev)
-LDFLAGS := -s -w -X github.com/amor7/gozar/internal/buildinfo.Version=$(VERSION)
+LDFLAGS := -s -w -X github.com/amor7/gozarDNS/internal/buildinfo.Version=$(VERSION)
 
 .PHONY: all web build release test dev clean
 

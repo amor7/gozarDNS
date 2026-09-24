@@ -13,9 +13,9 @@ import (
 	"strings"
 	"time"
 
-	"github.com/amor7/gozar/internal/auth"
-	"github.com/amor7/gozar/internal/buildinfo"
-	"github.com/amor7/gozar/internal/proto"
+	"github.com/amor7/gozarDNS/internal/auth"
+	"github.com/amor7/gozarDNS/internal/buildinfo"
+	"github.com/amor7/gozarDNS/internal/proto"
 )
 
 // pending is a batch sent but not yet acknowledged. It is resent unchanged

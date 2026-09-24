@@ -7,9 +7,9 @@ import (
 	"net/netip"
 	"time"
 
-	"github.com/amor7/gozar/internal/buildinfo"
-	"github.com/amor7/gozar/internal/ctl"
-	"github.com/amor7/gozar/internal/rules"
+	"github.com/amor7/gozarDNS/internal/buildinfo"
+	"github.com/amor7/gozarDNS/internal/ctl"
+	"github.com/amor7/gozarDNS/internal/rules"
 )
 
 // Status is what `gozar status` prints on a gate.

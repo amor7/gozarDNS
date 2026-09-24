@@ -8,10 +8,10 @@ import (
 	"net/netip"
 	"strings"
 
-	"github.com/amor7/gozar/internal/buildinfo"
-	"github.com/amor7/gozar/internal/ctl"
-	"github.com/amor7/gozar/internal/proto"
-	"github.com/amor7/gozar/internal/store"
+	"github.com/amor7/gozarDNS/internal/buildinfo"
+	"github.com/amor7/gozarDNS/internal/ctl"
+	"github.com/amor7/gozarDNS/internal/proto"
+	"github.com/amor7/gozarDNS/internal/store"
 )
 
 type gateKey struct{}
