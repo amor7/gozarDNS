@@ -22,6 +22,7 @@ export type Info = {
   currency: string;
   payment_info: string;
   signup_open: boolean;
+  online_pay: boolean;
   dns: string;
   your_ip: string;
   plans: PublicPlan[];
@@ -36,7 +37,9 @@ export type Payment = {
   plan_name: string;
   amount: number;
   note: string;
-  status: "pending" | "approved" | "rejected";
+  status: "pending" | "approved" | "rejected" | "failed";
+  method: "receipt" | "idpay";
+  track_id: string;
   admin_note: string;
   created_at: number;
 };

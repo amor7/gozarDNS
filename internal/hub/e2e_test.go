@@ -10,6 +10,8 @@ import (
 	"net"
 	"net/http"
 	"net/http/cookiejar"
+	"net/http/httptest"
+	"net/url"
 	"os"
 	"path/filepath"
 	"strconv"
@@ -80,7 +82,7 @@ func TestEndToEnd(t *testing.T) {
 		t.Fatal(err)
 	}
 	defer st.Close()
-	plan := &store.Plan{Name: "Games", MaxDevices: 2, QuotaBytes: 10 << 30, DurationDays: 30,
+	plan := &store.Plan{Name: "Games", Price: 150000, MaxDevices: 2, QuotaBytes: 10 << 30, DurationDays: 30,
 		Groups: []string{"playstation/online", "playstation/download"}, Public: true, IsDefault: true}
 	if err := st.SavePlan(plan); err != nil {
 		t.Fatal(err)
@@ -200,6 +202,97 @@ func TestEndToEnd(t *testing.T) {
 		u, _ = st.UserByName("sara")
 		return u.UsedBytes >= int64(len(payload))
 	})
+
+	// ---- online payment through a fake IDPay
+	var verifyCalls int
+	fake := httptest.NewTLSServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		if r.Header.Get("X-API-KEY") != "test-key" {
+			w.WriteHeader(403)
+			return
+		}
+		var in map[string]any
+		json.NewDecoder(r.Body).Decode(&in)
+		switch r.URL.Path {
+		case "/payment":
+			if in["amount"].(float64) != 1500000 { // 150,000 toman in rial
+				t.Errorf("amount sent to IDPay: %v", in["amount"])
+			}
+			w.WriteHeader(201)
+			json.NewEncoder(w).Encode(map[string]string{"id": "pay-abc", "link": "https://idpay.example/p/pay-abc"})
+		case "/payment/verify":
+			verifyCalls++
+			json.NewEncoder(w).Encode(map[string]any{"status": 100, "track_id": "777", "id": "pay-abc", "order_id": in["order_id"], "amount": "1500000"})
+		}
+	}))
+	defer fake.Close()
+	gate.IDPayBase = fake.URL
+	gate.IDPayClient = fake.Client()
+	_ = st.SetSetting(store.SetIDPayKey, "test-key")
+
+	code, out := call("POST", "/api/pay/online", map[string]int64{"plan_id": plan.ID})
+	if code != 200 || out["link"] != "https://idpay.example/p/pay-abc" {
+		t.Fatalf("pay online: %d %v", code, out)
+	}
+	pays, _ := st.Payments("", 0, 10)
+	var order int64
+	for _, p := range pays {
+		if p.Method == "idpay" {
+			order = p.ID
+		}
+	}
+	if order != 0 {
+		t.Fatal("an unpaid checkout must not be listed")
+	}
+	before, _ := st.UserByName("sara")
+	noFollow := &http.Client{Jar: jar, Transport: web.Transport, CheckRedirect: func(*http.Request, []*http.Request) error { return http.ErrUseLastResponse }}
+	// A forged callback that IDPay would not verify must not credit anything:
+	// here the id does not match the one IDPay issued.
+	form := url.Values{"status": {"10"}, "id": {"forged"}, "order_id": {"gz-1"}, "track_id": {"1"}}
+	resp2, err := noFollow.PostForm(portal+"/api/pay/callback", form)
+	if err != nil {
+		t.Fatal(err)
+	}
+	resp2.Body.Close()
+	if loc := resp2.Header.Get("Location"); loc != "/plans?pay=fail" {
+		t.Fatalf("forged callback redirected to %q", loc)
+	}
+	if verifyCalls != 0 {
+		t.Fatal("a mismatched id must be refused before verifying")
+	}
+	// The real callback.
+	for _, oid := range []string{"gz-1", "gz-1"} { // twice: must count once
+		form = url.Values{"status": {"10"}, "id": {"pay-abc"}, "order_id": {oid}, "track_id": {"555"}}
+		resp2, err = noFollow.PostForm(portal+"/api/pay/callback", form)
+		if err != nil {
+			t.Fatal(err)
+		}
+		resp2.Body.Close()
+		if loc := resp2.Header.Get("Location"); loc != "/plans?pay=ok" {
+			t.Fatalf("callback redirected to %q", loc)
+		}
+	}
+	if verifyCalls != 1 {
+		t.Fatalf("verified %d times, want 1", verifyCalls)
+	}
+	after, _ := st.UserByName("sara")
+	if *after.ExpiresAt <= *before.ExpiresAt {
+		t.Fatal("paying did not extend the plan")
+	}
+	p2, _ := st.Payment(1)
+	if p2.Status != store.PayApproved || p2.TrackID != "777" {
+		t.Fatalf("payment after verify: %+v", p2)
+	}
+
+	// ---- registering another network's address by hand
+	if code, out := call("POST", "/api/devices", map[string]string{"ip": "192.168.1.20"}); code != 400 || out["error"] != "ip_private" {
+		t.Fatalf("private address: %d %v", code, out)
+	}
+	if code, out := call("POST", "/api/devices", map[string]string{"ip": "۵.۱۲۰.۴۴.۱۹", "label": "PS5"}); code != 200 {
+		t.Fatalf("manual address: %d %v", code, out)
+	}
+	if d, err := st.DeviceByIP("5.120.44.19"); err != nil || d.Label != "PS5" {
+		t.Fatalf("manual device: %v %v", d, err)
+	}
 
 	// ---- the admin console
 	adminJar, _ := cookiejar.New(nil)

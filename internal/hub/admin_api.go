@@ -13,6 +13,7 @@ import (
 	"strconv"
 	"strings"
 	"time"
+	"unicode"
 
 	"github.com/amor7/gozarDNS/internal/auth"
 	"github.com/amor7/gozarDNS/internal/buildinfo"
@@ -882,13 +883,17 @@ func (s *Hub) aDeleteGate(w http.ResponseWriter, r *http.Request, a *store.Admin
 // ---------------------------------------------------------------- settings
 
 var editableSettings = []string{store.SetBrand, store.SetSupport, store.SetPaymentInfo, store.SetSignupOpen,
-	store.SetSignupPlan, store.SetNotice, store.SetCurrency, store.SetDNSAddress}
+	store.SetSignupPlan, store.SetNotice, store.SetCurrency, store.SetDNSAddress, store.SetIDPaySandbox, store.SetPriceUnit}
 
 func (s *Hub) aSettings(w http.ResponseWriter, r *http.Request, a *store.Admin) error {
 	all := s.store.Settings()
 	out := map[string]string{}
 	for _, k := range editableSettings {
 		out[k] = all[k]
+	}
+	// The key is write-only: the console learns whether one is set, never what.
+	if all[store.SetIDPayKey] != "" {
+		out["idpay_key_set"] = "1"
 	}
 	issued, until := s.adminCert.Status()
 	var certUntil int64
@@ -910,19 +915,32 @@ func (s *Hub) aUpdateSettings(w http.ResponseWriter, r *http.Request, a *store.A
 	if err := readJSON(r, &in); err != nil {
 		return err
 	}
+	if key, set := in[store.SetIDPayKey]; set {
+		key = strings.TrimSpace(key)
+		if len(key) > 200 || strings.IndexFunc(key, unicode.IsSpace) >= 0 {
+			return fail(400, "bad_request", "that does not look like an API key")
+		}
+		if err := s.store.SetSetting(store.SetIDPayKey, key); err != nil {
+			return err
+		}
+	}
 	for k, v := range in {
 		if !slices.Contains(editableSettings, k) {
 			continue
 		}
 		v = strings.TrimSpace(v)
 		switch k {
-		case store.SetSignupOpen:
+		case store.SetSignupOpen, store.SetIDPaySandbox:
 			if v != "1" {
 				v = "0"
 			}
 		case store.SetSignupPlan:
 			if _, err := strconv.ParseInt(v, 10, 64); err != nil {
 				v = "0"
+			}
+		case store.SetPriceUnit:
+			if v != "rial" {
+				v = "toman"
 			}
 		case store.SetDNSAddress:
 			if v != "" && net.ParseIP(v) == nil {

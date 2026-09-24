@@ -242,6 +242,7 @@ func (s *Hub) maintain(ctx context.Context) {
 			if n%60 == 0 {
 				s.store.Prune()
 				s.store.PruneReceipts()
+				s.store.PruneOnline()
 				s.detectIPv6()
 			}
 		}

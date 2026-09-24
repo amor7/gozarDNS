@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { Link } from "react-router";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { Check, ExternalLink, FileText, ImageOff, Receipt, X } from "lucide-react";
+import { Check, CreditCard, ExternalLink, FileText, ImageOff, Receipt, X } from "lucide-react";
 import { api } from "@shared/api";
 import { useI18n } from "@shared/i18n";
 import { date, num, relative } from "@shared/format";
@@ -17,7 +17,7 @@ export function Payments() {
   const [tab, setTab] = useState<Tab>("pending");
   const q = useQuery({ queryKey: ["payments", tab], queryFn: () => api<Payment[]>(`/payments?status=${tab}`), refetchInterval: 30_000 });
   const [open, setOpen] = useState<Payment | null>(null);
-  const tones = { pending: "warning", approved: "success", rejected: "danger" } as const;
+  const tones = { pending: "warning", approved: "success", rejected: "danger", failed: "danger" } as const;
 
   return (
     <div>
@@ -37,7 +37,13 @@ export function Payments() {
           {q.data.map((p) => (
             <Card key={p.id} className="overflow-hidden flex flex-col animate-in">
               <button onClick={() => setOpen(p)} className="relative h-44 bg-surface-2 border-b border-line grid place-items-center overflow-hidden group">
-                {p.has_receipt && p.receipt_type.startsWith("image/") ? (
+                {p.method === "idpay" ? (
+                  <div className="flex flex-col items-center gap-2 text-primary">
+                    <CreditCard className="size-10" />
+                    <span className="text-sm font-bold">{t("pay.online")}</span>
+                    {p.track_id && <span className="text-xs text-muted ltr">#{p.track_id}</span>}
+                  </div>
+                ) : p.has_receipt && p.receipt_type.startsWith("image/") ? (
                   <img src={`/api/payments/${p.id}/receipt`} alt="" loading="lazy" className="size-full object-cover group-hover:scale-105 transition-transform duration-500" />
                 ) : p.has_receipt ? (
                   <FileText className="size-10 text-faint" />

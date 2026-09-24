@@ -21,6 +21,8 @@ type Payment struct {
 	CreatedAt   int64  `json:"created_at"`
 	DecidedAt   *int64 `json:"decided_at"`
 	DecidedBy   string `json:"decided_by"`
+	Method      string `json:"method"` // "receipt" or "idpay"
+	TrackID     string `json:"track_id"`
 }
 
 const (
@@ -30,7 +32,8 @@ const (
 )
 
 const payCols = `pm.id, pm.user_id, u.username, pm.plan_id, COALESCE(p.name, ''), pm.amount, pm.note,
-	pm.receipt IS NOT NULL, pm.receipt_type, pm.status, pm.admin_note, pm.created_at, pm.decided_at, pm.decided_by`
+	pm.receipt IS NOT NULL, pm.receipt_type, pm.status, pm.admin_note, pm.created_at, pm.decided_at, pm.decided_by,
+	pm.method, pm.track_id`
 
 const payFrom = ` FROM payments pm JOIN users u ON u.id = pm.user_id LEFT JOIN plans p ON p.id = pm.plan_id `
 
@@ -39,7 +42,7 @@ func scanPayment(row interface{ Scan(...any) error }) (*Payment, error) {
 	var plan, decided sql.NullInt64
 	var has int
 	err := row.Scan(&p.ID, &p.UserID, &p.Username, &plan, &p.PlanName, &p.Amount, &p.Note, &has,
-		&p.ReceiptType, &p.Status, &p.AdminNote, &p.CreatedAt, &decided, &p.DecidedBy)
+		&p.ReceiptType, &p.Status, &p.AdminNote, &p.CreatedAt, &decided, &p.DecidedBy, &p.Method, &p.TrackID)
 	if errors.Is(err, sql.ErrNoRows) {
 		return nil, ErrNotFound
 	}
@@ -58,6 +61,8 @@ func (s *Store) Payments(status string, userID int64, limit int) ([]*Payment, er
 	if status != "" {
 		q += " AND pm.status = ?"
 		args = append(args, status)
+	} else {
+		q += " AND pm.status != 'started'"
 	}
 	if userID > 0 {
 		q += " AND pm.user_id = ?"

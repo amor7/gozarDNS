@@ -71,6 +71,8 @@ func clientIP(r *http.Request) netip.Addr {
 func (p *portal) server(tlsCfg *tls.Config) *http.Server {
 	mux := http.NewServeMux()
 	mux.HandleFunc("GET /api/probe/{token}", p.probe)
+	mux.HandleFunc("POST /api/pay/online", p.payStart)
+	mux.HandleFunc("/api/pay/callback", p.payCallback)
 	mux.HandleFunc("/api/", p.api)
 	mux.Handle("/", p.app)
 	return &http.Server{

@@ -119,3 +119,17 @@ func ParseJoinToken(s string) (JoinToken, error) {
 	}
 	return t, nil
 }
+
+// IDPayOrder is what the hub tells a gate about an online payment. It carries
+// the API key, so it only ever moves over the gate's authenticated channel.
+type IDPayOrder struct {
+	OrderID    string `json:"order_id"`
+	AmountRial int64  `json:"amount_rial"`
+	Name       string `json:"name,omitempty"`
+	Phone      string `json:"phone,omitempty"`
+	Desc       string `json:"desc,omitempty"`
+	APIKey     string `json:"api_key"`
+	Sandbox    bool   `json:"sandbox"`
+	Ref        string `json:"ref,omitempty"`
+	Status     string `json:"status,omitempty"`
+}

@@ -230,6 +230,12 @@ CREATE TABLE activity (
 );
 CREATE INDEX activity_at ON activity(at);
 `,
+	// 2: online payments through a gateway, beside photographed receipts
+	`
+ALTER TABLE payments ADD COLUMN method TEXT NOT NULL DEFAULT 'receipt';
+ALTER TABLE payments ADD COLUMN gateway_ref TEXT NOT NULL DEFAULT '';
+ALTER TABLE payments ADD COLUMN track_id TEXT NOT NULL DEFAULT '';
+`,
 }
 
 func (s *Store) migrate() error {
@@ -273,6 +279,9 @@ const (
 	SetCurrency      = "currency"       // label shown next to prices
 	SetDisabledRules = "disabled_rules" // JSON list of built-in rule ids switched off
 	SetDNSAddress    = "dns_address"    // override for the DNS address customers are shown
+	SetIDPayKey      = "idpay_key"      // IDPay API key; empty turns online payment off
+	SetIDPaySandbox  = "idpay_sandbox"  // "1": IDPay's test mode, no real money moves
+	SetPriceUnit     = "price_unit"     // "toman" or "rial": what plan prices are written in
 )
 
 var settingDefaults = map[string]string{
@@ -281,6 +290,7 @@ var settingDefaults = map[string]string{
 	SetSignupPlan:    "0",
 	SetCurrency:      "تومان",
 	SetDisabledRules: "[]",
+	SetPriceUnit:     "toman",
 }
 
 func (s *Store) Setting(key string) string {

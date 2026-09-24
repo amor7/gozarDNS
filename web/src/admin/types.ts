@@ -58,7 +58,9 @@ export type Payment = {
   note: string;
   has_receipt: boolean;
   receipt_type: string;
-  status: "pending" | "approved" | "rejected";
+  status: "pending" | "approved" | "rejected" | "failed";
+  method: "receipt" | "idpay";
+  track_id: string;
   admin_note: string;
   created_at: number;
   decided_at: number | null;

@@ -1,5 +1,6 @@
-import { useRef, useState, type ReactNode } from "react";
-import { Check, CreditCard, FileText, ImageUp, Receipt } from "lucide-react";
+import { useEffect, useRef, useState, type ReactNode } from "react";
+import { useSearchParams } from "react-router";
+import { Check, CreditCard, FileText, ImageUp, Receipt, ShieldCheck } from "lucide-react";
 import { api } from "@shared/api";
 import { useI18n } from "@shared/i18n";
 import { bytes, date, money, num, speed } from "@shared/format";
@@ -67,8 +68,21 @@ export function Plans() {
   const info = useInfo().data;
   const me = useMe().data;
   const [buying, setBuying] = useState<PublicPlan | null>(null);
+  const [params, setParams] = useSearchParams();
+  const toast = useToast();
+  const refresh = useRefresh();
+  // Back from the payment gateway.
+  useEffect(() => {
+    const r = params.get("pay");
+    if (!r) return;
+    if (r === "ok") toast.success(t("pay.online.ok"));
+    else toast.error({ code: r === "error" ? "hub_unreachable" : "pay_failed" });
+    refresh();
+    setParams({}, { replace: true });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [params]);
   if (!info || !me) return null;
-  const statusTone = { pending: "warning", approved: "success", rejected: "danger" } as const;
+  const statusTone = { pending: "warning", approved: "success", rejected: "danger", failed: "danger" } as const;
 
   return (
     <div className="space-y-6 animate-in">
@@ -99,7 +113,11 @@ export function Plans() {
               <div key={p.id} className="flex items-center gap-3 p-3 rounded-2xl hover:bg-surface-2">
                 <div className="flex-1 min-w-0">
                   <div className="font-semibold text-sm">{p.plan_name || "—"}</div>
-                  <div className="text-xs text-muted mt-0.5">{date(p.created_at, lang, true)}</div>
+                  <div className="text-xs text-muted mt-0.5">
+                    {date(p.created_at, lang, true)}
+                    {p.method === "idpay" && " · " + t("pay.online.badge")}
+                    {p.track_id && <span className="ltr"> · #{p.track_id}</span>}
+                  </div>
                   {p.admin_note && <div className="text-xs text-muted mt-1">“{p.admin_note}”</div>}
                 </div>
                 <div className="text-end">
@@ -127,6 +145,19 @@ function PaySheet({ plan, onClose }: { plan: PublicPlan; onClose: () => void }) 
   const [preview, setPreview] = useState<string | null>(null);
   const [note, setNote] = useState("");
   const [busy, setBusy] = useState(false);
+  const [paying, setPaying] = useState(false);
+  const [showReceipt, setShowReceipt] = useState(!info.online_pay);
+
+  const payOnline = async () => {
+    setPaying(true);
+    try {
+      const r = await api<{ link: string }>("/pay/online", { body: { plan_id: plan.id } });
+      window.location.href = r.link;
+    } catch (e) {
+      toast.error(e);
+      setPaying(false);
+    }
+  };
 
   const pick = (f: File | null) => {
     setFile(f);
@@ -156,7 +187,34 @@ function PaySheet({ plan, onClose }: { plan: PublicPlan; onClose: () => void }) 
 
   return (
     <Modal open onClose={onClose} title={t("pay.title", { plan: plan.name })}
-      footer={<><Button variant="secondary" onClick={onClose}>{t("ui.cancel")}</Button><Button onClick={send} loading={busy} disabled={!file}>{t("pay.send")}</Button></>}>
+      footer={showReceipt ? <><Button variant="secondary" onClick={onClose}>{t("ui.cancel")}</Button><Button onClick={send} loading={busy} disabled={!file}>{t("pay.send")}</Button></> : undefined}>
+      {info.online_pay && (
+        <div className="mb-5">
+          <div className="rounded-2xl gradient-bg text-white p-5 relative overflow-hidden">
+            <div className="absolute -top-10 -end-10 size-32 rounded-full bg-white/10" />
+            <div className="text-sm text-white/80">{t("pay.amount")}</div>
+            <div className="text-3xl font-black num mt-1">{money(plan.price, lang, info.currency)}</div>
+            <button
+              onClick={payOnline}
+              disabled={paying}
+              className="mt-4 w-full h-12 rounded-xl bg-white text-[#3b2bb3] font-bold flex items-center justify-center gap-2 hover:brightness-95 active:scale-[0.98] transition disabled:opacity-70"
+            >
+              <CreditCard className="size-5" />
+              {paying ? "…" : t("pay.online")}
+            </button>
+            <div className="flex items-center justify-center gap-1.5 text-xs text-white/80 mt-3">
+              <ShieldCheck className="size-3.5" />
+              {t("pay.online.sub")}
+            </div>
+          </div>
+          {!showReceipt && (
+            <button className="w-full text-center text-sm text-muted hover:text-fg mt-4" onClick={() => setShowReceipt(true)}>
+              {t("pay.or.receipt")}
+            </button>
+          )}
+        </div>
+      )}
+      {showReceipt && (
       <div className="space-y-5">
         <Step n={1} title={t("pay.step1")}>
           <div className="rounded-2xl bg-surface-2 border border-line p-4">
@@ -198,6 +256,7 @@ function PaySheet({ plan, onClose }: { plan: PublicPlan; onClose: () => void }) 
           </Field>
         </Step>
       </div>
+      )}
     </Modal>
   );
 }

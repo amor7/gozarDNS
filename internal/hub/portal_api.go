@@ -12,6 +12,7 @@ import (
 
 	"github.com/amor7/gozarDNS/internal/auth"
 	"github.com/amor7/gozarDNS/internal/catalog"
+	"github.com/amor7/gozarDNS/internal/netx"
 	"github.com/amor7/gozarDNS/internal/proto"
 	"github.com/amor7/gozarDNS/internal/store"
 )
@@ -154,6 +155,7 @@ func (s *Hub) pInfo(w http.ResponseWriter, r *http.Request) error {
 		"currency":     set[store.SetCurrency],
 		"payment_info": set[store.SetPaymentInfo],
 		"signup_open":  set[store.SetSignupOpen] == "1",
+		"online_pay":   set[store.SetIDPayKey] != "",
 		"dns":          s.dnsAddress(r),
 		"your_ip":      clientAddr(r).String(),
 		"plans":        pub,
@@ -348,12 +350,24 @@ func (s *Hub) pClaim(w http.ResponseWriter, r *http.Request, u *store.User) erro
 	var in struct {
 		Label   string `json:"label"`
 		Replace int64  `json:"replace"`
+		// IP registers an address other than the one this page is open on:
+		// the home connection of a console, say, from a phone on mobile data.
+		IP string `json:"ip"`
 	}
 	if err := readJSON(r, &in); err != nil {
 		return err
 	}
 	a := clientAddr(r)
-	if !a.Is4() {
+	if in.IP != "" {
+		m, err := netip.ParseAddr(strings.TrimSpace(latinDigits(in.IP)))
+		if err != nil || !m.Is4() {
+			return fail(400, "ip_invalid", "not an IPv4 address")
+		}
+		if !netx.IsPublic(m) {
+			return fail(400, "ip_private", "that is an address inside a home network, not the internet address")
+		}
+		a = m
+	} else if !a.Is4() {
 		return fail(400, "ipv6_unsupported", "this connection is IPv6; open the page over IPv4 (turn Wi-Fi IPv6 off or use the address link)")
 	}
 	d, err := s.store.ClaimIP(u.ID, a.String(), trimmed(in.Label, 40), in.Replace)

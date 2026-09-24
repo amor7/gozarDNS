@@ -293,6 +293,7 @@ function Devices({ me }: { me: Me }) {
   const toast = useToast();
   const refresh = useRefresh();
   const [editing, setEditing] = useState<{ id: number; label: string } | null>(null);
+  const [manual, setManual] = useState(false);
 
   const remove = async (id: number, ip: string) => {
     if (!(await confirm({ title: t("dev.remove.q"), body: t("dev.remove.s", { ip }), confirm: t("dev.remove"), danger: true }))) return;
@@ -318,6 +319,13 @@ function Devices({ me }: { me: Me }) {
   return (
     <Card className="lg:col-span-2">
       <CardHeader title={t("dev.title")} action={<Badge>{t("dev.count", { n: num(me.devices.length, lang), max: num(me.user.max_devices, lang) })}</Badge>} />
+      <div className="px-5 -mt-1 mb-2">
+        <button onClick={() => setManual(true)} className="text-sm text-primary font-semibold inline-flex items-center gap-1.5 hover:underline">
+          <Plus className="size-4" />
+          {t("dev.manual")}
+        </button>
+      </div>
+      {manual && <ManualIP me={me} onClose={() => setManual(false)} />}
       <div className="px-3 pb-3">
         {me.devices.length === 0 && <div className="text-sm text-muted px-2 py-6 text-center">{t("dev.none")}</div>}
         {me.devices.map((d) => (
@@ -374,5 +382,60 @@ function Services({ me }: { me: Me }) {
         ))}
       </div>
     </Card>
+  );
+}
+
+/** Register a network other than the one this page is open on. */
+function ManualIP({ me, onClose }: { me: Me; onClose: () => void }) {
+  const { t } = useI18n();
+  const toast = useToast();
+  const refresh = useRefresh();
+  const [ip, setIp] = useState("");
+  const [label, setLabel] = useState("");
+  const [replace, setReplace] = useState<number | null>(null);
+  const [busy, setBusy] = useState(false);
+  const full = me.devices.length >= me.user.max_devices;
+  const submit = async () => {
+    setBusy(true);
+    try {
+      await api("/devices", { body: { ip: ip.trim(), label, replace: replace ?? 0 } });
+      toast.success(t("dev.manual.added"));
+      refresh();
+      onClose();
+    } catch (e) {
+      toast.error(e);
+    } finally {
+      setBusy(false);
+    }
+  };
+  return (
+    <Modal open onClose={onClose} title={t("dev.manual.t")} sub={t("dev.manual.s")}
+      footer={<><Button variant="secondary" onClick={onClose}>{t("ui.cancel")}</Button><Button onClick={submit} loading={busy} disabled={!ip.trim() || (full && !replace)}>{full ? t("conn.replace") : t("ui.save")}</Button></>}>
+      <div className="space-y-4">
+        <Field label={t("dev.manual.ip")} hint={t("dev.manual.how")}>
+          <Input value={ip} onChange={(e) => setIp(e.target.value)} ltr inputMode="decimal" placeholder="5.120.44.19" className="text-lg font-bold tracking-wide" />
+        </Field>
+        <Field label={t("conn.label")}>
+          <Input value={label} onChange={(e) => setLabel(e.target.value)} placeholder={t("conn.label.ph")} maxLength={40} />
+        </Field>
+        {full && (
+          <div>
+            <div className="text-sm font-semibold mb-2">{t("conn.replace.s")}</div>
+            <div className="space-y-2">
+              {me.devices.map((d) => (
+                <button key={d.id} type="button" onClick={() => setReplace(d.id)}
+                  className={cn("w-full flex items-center gap-3 p-3 rounded-2xl border text-start transition-colors", replace === d.id ? "border-primary bg-primary-soft" : "border-line hover:bg-surface-2")}>
+                  <Laptop className="size-5 text-muted" />
+                  <div className="flex-1 min-w-0">
+                    <div className="font-semibold text-sm truncate">{d.label || t("dev.unnamed")}</div>
+                    <div className="text-xs text-muted ltr text-start num">{d.ip}</div>
+                  </div>
+                </button>
+              ))}
+            </div>
+          </div>
+        )}
+      </div>
+    </Modal>
   );
 }

@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { renderSVG } from "uqr";
-import { DatabaseBackup, Download, Info, KeyRound, Plus, ShieldCheck, SlidersHorizontal, Trash2, Upload, Users as UsersIcon } from "lucide-react";
+import { CreditCard, DatabaseBackup, Download, Info, KeyRound, Plus, ShieldCheck, SlidersHorizontal, Trash2, Upload, Users as UsersIcon } from "lucide-react";
 import { api } from "@shared/api";
 import { useI18n } from "@shared/i18n";
 import { date, latinDigits, relative } from "@shared/format";
@@ -26,6 +26,7 @@ export function Settings() {
       <div className="grid xl:grid-cols-2 gap-5 items-start">
         <div className="space-y-5">
           <General s={q.data.settings} />
+          <OnlinePay s={q.data.settings} />
           <Backup />
         </div>
         <div className="space-y-5">
@@ -287,6 +288,59 @@ function System({ sys }: { sys: SettingsResp["system"] }) {
         <KV k={t("set.system.url")} v={<span className="ltr text-xs">{sys.admin_url}</span>} />
         <KV k={t("set.system.cert")} v={cert} />
         <KV k={t("set.system.ipv6")} v={<Badge tone={sys.ipv6_egress ? "success" : "neutral"}>{sys.ipv6_egress ? t("set.system.on") : t("set.system.off")}</Badge>} />
+      </div>
+    </Card>
+  );
+}
+
+function OnlinePay({ s }: { s: Record<string, string> }) {
+  const { t } = useI18n();
+  const qc = useQueryClient();
+  const toast = useToast();
+  const confirm = useConfirm();
+  const [key, setKey] = useState("");
+  const [sandbox, setSandbox] = useState(s.idpay_sandbox === "1");
+  const [unit, setUnit] = useState(s.price_unit || "toman");
+  const [busy, setBusy] = useState(false);
+  const isSet = s.idpay_key_set === "1";
+  const save = async (extra: Record<string, string> = {}) => {
+    setBusy(true);
+    try {
+      const body: Record<string, string> = { idpay_sandbox: sandbox ? "1" : "0", price_unit: unit, ...extra };
+      if (key.trim()) body.idpay_key = key.trim();
+      await api("/settings", { method: "PATCH", body });
+      setKey("");
+      toast.success(t("ui.saved"));
+      qc.invalidateQueries({ queryKey: ["settings"] });
+    } catch (e) {
+      toast.error(e);
+    } finally {
+      setBusy(false);
+    }
+  };
+  return (
+    <Card>
+      <CardHeader title={t("set.idpay")} sub={t("set.idpay.sub")} icon={<CreditCard className="size-[18px]" />}
+        action={<Badge tone={isSet ? "success" : "neutral"} dot>{isSet ? t("set.idpay.on") : t("set.idpay.off")}</Badge>} />
+      <div className="px-5 pb-5 space-y-4">
+        <Field label={t("set.idpay.key")} hint={isSet ? t("set.idpay.key.set") : t("set.idpay.key.hint")}>
+          <PasswordInput value={key} onChange={(e) => setKey(e.target.value)} placeholder={isSet ? "••••••••••••" : ""} autoComplete="off" />
+        </Field>
+        <Field label={t("set.idpay.unit")} hint={t("set.idpay.unit.hint")}>
+          <Select value={unit} onChange={(e) => setUnit(e.target.value)}>
+            <option value="toman">{t("set.idpay.toman")}</option>
+            <option value="rial">{t("set.idpay.rial")}</option>
+          </Select>
+        </Field>
+        <Switch checked={sandbox} onChange={setSandbox} label={t("set.idpay.sandbox")} />
+        <div className="flex flex-wrap gap-2">
+          <Button onClick={() => save()} loading={busy}>{t("ui.save")}</Button>
+          {isSet && (
+            <Button variant="secondary" className="text-danger" onClick={async () => {
+              if (await confirm({ title: t("set.idpay.remove.q"), danger: true })) save({ idpay_key: "" });
+            }}>{t("set.idpay.remove")}</Button>
+          )}
+        </div>
       </div>
     </Card>
   );
