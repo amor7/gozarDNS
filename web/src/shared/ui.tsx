@@ -392,7 +392,7 @@ export function Spinner({ className }: { className?: string }) {
 
 export function PageLoader() {
   return (
-    <div className="grid place-items-center min-h-[40vh]">
+    <div className="grid place-items-center min-h-[60dvh]">
       <Spinner className="size-7" />
     </div>
   );

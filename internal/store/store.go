@@ -10,6 +10,7 @@ import (
 	"os"
 	"path/filepath"
 	"strconv"
+	"strings"
 	"sync"
 	"time"
 
@@ -325,7 +326,11 @@ type Activity struct {
 	Detail string `json:"detail"`
 }
 
-func (s *Store) Log(actor, kind, detail string) {
+// Log records an event. msg is a message key the web app translates; args
+// fill its {0}, {1}... placeholders. They are stored joined by a unit
+// separator so the key and its arguments come back apart.
+func (s *Store) Log(actor, kind, msg string, args ...string) {
+	detail := strings.Join(append([]string{msg}, args...), "")
 	_, _ = s.db.Exec("INSERT INTO activity(at, actor, kind, detail) VALUES(?, ?, ?, ?)", time.Now().Unix(), actor, kind, detail)
 }
 

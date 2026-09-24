@@ -240,9 +240,9 @@ func seed(st *store.Store) seededGate {
 		return string(b)
 	}
 	_ = st.SeedGateSeen(g2.ID, "185.55.226.14", now.Add(-40*time.Second).Unix(), status(2140), "v1.0.0")
-	st.Log("admin", "login", "from 127.0.0.1")
-	st.Log("sara", "payment", "sent receipt #1")
-	st.Log("admin", "plan", "saved plan گیمر")
+	st.Log("admin", "login", "login", "127.0.0.1")
+	st.Log("sara", "payment", "payment_sent", "1")
+	st.Log("admin", "plan", "plan_saved", "گیمر")
 	return seededGate{g.ID, secret}
 }
 

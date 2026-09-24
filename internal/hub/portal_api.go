@@ -231,13 +231,13 @@ func (s *Hub) pSignup(w http.ResponseWriter, r *http.Request) error {
 		return err
 	}
 	s.signupThrottle.Fail(ip) // counts sign-ups, not failures
-	s.store.Log(u.Username, "signup", "from "+ip)
+	s.store.Log(u.Username, "signup", "signup", ip)
 
 	// Register the address they signed up from, if it is free: most people
 	// sign up on the network they want to use.
 	if a := clientAddr(r); a.Is4() {
 		if _, err := s.store.ClaimIP(u.ID, a.String(), "", 0); err == nil {
-			s.store.Log(u.Username, "device", "registered "+a.String()+" at sign-up")
+			s.store.Log(u.Username, "device", "device_added", a.String())
 		}
 	}
 	tok, err := s.store.CreateSession("user", u.ID, 30*24*time.Hour, ip, r.UserAgent())
@@ -367,7 +367,7 @@ func (s *Hub) pClaim(w http.ResponseWriter, r *http.Request, u *store.User) erro
 	case err != nil:
 		return err
 	}
-	s.store.Log(u.Username, "device", "registered "+a.String())
+	s.store.Log(u.Username, "device", "device_added", a.String())
 	return ok(w, d)
 }
 
@@ -399,7 +399,7 @@ func (s *Hub) pDeleteDevice(w http.ResponseWriter, r *http.Request, u *store.Use
 		}
 		return err
 	}
-	s.store.Log(u.Username, "device", "removed a device")
+	s.store.Log(u.Username, "device", "device_removed")
 	return ok(w, nil)
 }
 
@@ -476,6 +476,6 @@ func (s *Hub) pPayment(w http.ResponseWriter, r *http.Request, u *store.User) er
 	if err != nil {
 		return err
 	}
-	s.store.Log(u.Username, "payment", "sent receipt #"+strconv.FormatInt(id, 10))
+	s.store.Log(u.Username, "payment", "payment_sent", strconv.FormatInt(id, 10))
 	return ok(w, map[string]int64{"id": id})
 }

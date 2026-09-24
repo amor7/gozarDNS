@@ -6,7 +6,7 @@
   "scripts": {
     "dev:admin": "vite --mode admin",
     "dev:portal": "vite --mode portal",
-    "build": "tsc --noEmit && vite build --mode admin && vite build --mode portal",
+    "build": "tsc --noEmit && vite build --mode admin && vite build --mode portal && node scripts/keep.cjs",
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {

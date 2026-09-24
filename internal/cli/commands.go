@@ -408,7 +408,7 @@ func cmdAdmin(cfgPath string, a []string) error {
 		if err := st.SetAdminPassword(ad.ID, auth.HashPassword(pw)); err != nil {
 			return err
 		}
-		st.Log("cli", "security", "password reset for "+name)
+		st.Log("cli", "security", "admin_password_reset", name)
 		box("Password changed", []string{"username  " + bold(name), "password  " + bold(pw), dim("every session of this admin was signed out")})
 	case "2fa-off":
 		ad, err := st.AdminByName(name)
@@ -418,7 +418,7 @@ func cmdAdmin(cfgPath string, a []string) error {
 		if err := st.SetAdminTOTP(ad.ID, "", false); err != nil {
 			return err
 		}
-		st.Log("cli", "security", "two-step sign-in turned off for "+name)
+		st.Log("cli", "security", "admin_2fa_reset", name)
 		okf("two-step sign-in is off for %s", name)
 	default:
 		return fmt.Errorf("unknown admin command %q", a[0])
@@ -464,7 +464,7 @@ func cmdGate(cfgPath string, a []string) error {
 		h := cfg.Hub
 		tok := hub.JoinToken(&hub.HubInfo{PublicIP: h.PublicIP, ControlPort: h.ControlPort, HTTPSPort: h.HTTPSPort,
 			HTTPPort: h.HTTPPort, Fingerprint: certs.Fingerprint(ctrl)}, g.ID, secret)
-		st.Log("cli", "gate", "added gate "+name)
+		st.Log("cli", "gate", "gate_added", name)
 		fmt.Println()
 		fmt.Println("   " + bold("Join token for "+name) + dim(" - run `gozar setup` on the gate and paste it:"))
 		fmt.Println()

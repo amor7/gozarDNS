@@ -4,7 +4,6 @@ import (
 	"context"
 	"encoding/json"
 	"errors"
-	"fmt"
 	"io"
 	"net"
 	"net/http"
@@ -157,7 +156,7 @@ func (s *Hub) aLogin(w http.ResponseWriter, r *http.Request) error {
 		return err
 	}
 	s.store.TouchAdminLogin(a.ID)
-	s.store.Log(a.Username, "login", "from "+ip)
+	s.store.Log(a.Username, "login", "login", ip)
 	http.SetCookie(w, &http.Cookie{Name: adminCookie, Value: tok, Path: "/", MaxAge: 7 * 86400,
 		HttpOnly: true, Secure: true, SameSite: http.SameSiteStrictMode})
 	return ok(w, nil)
@@ -190,7 +189,7 @@ func (s *Hub) aMyPassword(w http.ResponseWriter, r *http.Request, a *store.Admin
 	if err := s.store.SetAdminPassword(a.ID, auth.HashPassword(in.New)); err != nil {
 		return err
 	}
-	s.store.Log(a.Username, "security", "changed their password")
+	s.store.Log(a.Username, "security", "own_password")
 	return ok(w, nil)
 }
 
@@ -216,7 +215,7 @@ func (s *Hub) aTOTPEnable(w http.ResponseWriter, r *http.Request, a *store.Admin
 	if err := s.store.SetAdminTOTP(a.ID, a.TOTPSecret, true); err != nil {
 		return err
 	}
-	s.store.Log(a.Username, "security", "turned on two-step sign-in")
+	s.store.Log(a.Username, "security", "2fa_on")
 	return ok(w, nil)
 }
 
@@ -231,7 +230,7 @@ func (s *Hub) aTOTPDisable(w http.ResponseWriter, r *http.Request, a *store.Admi
 	if err := s.store.SetAdminTOTP(a.ID, "", false); err != nil {
 		return err
 	}
-	s.store.Log(a.Username, "security", "turned off two-step sign-in")
+	s.store.Log(a.Username, "security", "2fa_off")
 	return ok(w, nil)
 }
 
@@ -364,7 +363,7 @@ func (s *Hub) aCreateUser(w http.ResponseWriter, r *http.Request, a *store.Admin
 			s.log.Warn("could not register address for new user", "ip", ip, "err", err)
 		}
 	}
-	s.store.Log(a.Username, "user", "created "+u.Username)
+	s.store.Log(a.Username, "user", "user_created", u.Username)
 	return ok(w, map[string]any{"user": u, "password": generated})
 }
 
@@ -399,7 +398,7 @@ func (s *Hub) aUpdateUser(w http.ResponseWriter, r *http.Request, a *store.Admin
 		return err
 	}
 	u, _ := s.store.User(id)
-	s.store.Log(a.Username, "user", "edited "+u.Username)
+	s.store.Log(a.Username, "user", "user_edited", u.Username)
 	return ok(w, u)
 }
 
@@ -415,7 +414,7 @@ func (s *Hub) aDeleteUser(w http.ResponseWriter, r *http.Request, a *store.Admin
 	if err := s.store.DeleteUser(id); err != nil {
 		return err
 	}
-	s.store.Log(a.Username, "user", "deleted "+u.Username)
+	s.store.Log(a.Username, "user", "user_deleted", u.Username)
 	return ok(w, nil)
 }
 
@@ -443,7 +442,7 @@ func (s *Hub) aUserPlan(w http.ResponseWriter, r *http.Request, a *store.Admin) 
 		return err
 	}
 	u, _ := s.store.User(id)
-	s.store.Log(a.Username, "plan", fmt.Sprintf("%s: %s %s", u.Username, map[bool]string{true: "extended", false: "started"}[in.Mode == "extend"], u.PlanName))
+	s.store.Log(a.Username, "plan", map[bool]string{true: "plan_extended", false: "plan_started"}[in.Mode == "extend"], u.Username, u.PlanName)
 	return ok(w, u)
 }
 
@@ -456,7 +455,7 @@ func (s *Hub) aResetUsage(w http.ResponseWriter, r *http.Request, a *store.Admin
 		return err
 	}
 	u, _ := s.store.User(id)
-	s.store.Log(a.Username, "user", "reset usage of "+u.Username)
+	s.store.Log(a.Username, "user", "usage_reset", u.Username)
 	return ok(w, u)
 }
 
@@ -478,7 +477,7 @@ func (s *Hub) aUserPassword(w http.ResponseWriter, r *http.Request, a *store.Adm
 		return err
 	}
 	u, _ := s.store.User(id)
-	s.store.Log(a.Username, "user", "set a new password for "+u.Username)
+	s.store.Log(a.Username, "user", "user_password", u.Username)
 	return ok(w, map[string]string{"password": pw})
 }
 
@@ -504,7 +503,7 @@ func (s *Hub) aAddDevice(w http.ResponseWriter, r *http.Request, a *store.Admin)
 		return err
 	}
 	u, _ := s.store.User(id)
-	s.store.Log(a.Username, "device", "registered "+ip+" for "+u.Username)
+	s.store.Log(a.Username, "device", "device_added_for", ip, u.Username)
 	return ok(w, nil)
 }
 
@@ -521,7 +520,7 @@ func (s *Hub) aDeleteDevice(w http.ResponseWriter, r *http.Request, a *store.Adm
 		return errNotFound
 	}
 	u, _ := s.store.User(id)
-	s.store.Log(a.Username, "device", "removed a device from "+u.Username)
+	s.store.Log(a.Username, "device", "device_removed_for", u.Username)
 	return ok(w, nil)
 }
 
@@ -588,7 +587,7 @@ func (s *Hub) aSavePlan(w http.ResponseWriter, r *http.Request, a *store.Admin) 
 		}
 		return err
 	}
-	s.store.Log(a.Username, "plan", "saved plan "+p.Name)
+	s.store.Log(a.Username, "plan", "plan_saved", p.Name)
 	saved, _ := s.store.Plan(p.ID)
 	return ok(w, saved)
 }
@@ -608,7 +607,7 @@ func (s *Hub) aDeletePlan(w http.ResponseWriter, r *http.Request, a *store.Admin
 		}
 		return err
 	}
-	s.store.Log(a.Username, "plan", "deleted plan "+p.Name)
+	s.store.Log(a.Username, "plan", "plan_deleted", p.Name)
 	return ok(w, nil)
 }
 
@@ -651,7 +650,7 @@ func (s *Hub) aAddDomain(w http.ResponseWriter, r *http.Request, a *store.Admin)
 	if err := s.store.AddCustomDomain(in); err != nil {
 		return err
 	}
-	s.store.Log(a.Username, "domain", fmt.Sprintf("added %s (%s)", in.Domain, in.Action))
+	s.store.Log(a.Username, "domain", "domain_added", in.Domain, in.Action)
 	return ok(w, nil)
 }
 
@@ -660,7 +659,7 @@ func (s *Hub) aDeleteDomain(w http.ResponseWriter, r *http.Request, a *store.Adm
 	if err := s.store.DeleteCustomDomain(d); err != nil {
 		return errNotFound
 	}
-	s.store.Log(a.Username, "domain", "removed "+d)
+	s.store.Log(a.Username, "domain", "domain_removed", d)
 	return ok(w, nil)
 }
 
@@ -687,7 +686,7 @@ func (s *Hub) aToggleRule(w http.ResponseWriter, r *http.Request, a *store.Admin
 	if err := s.store.SetSetting(store.SetDisabledRules, string(b)); err != nil {
 		return err
 	}
-	s.store.Log(a.Username, "domain", fmt.Sprintf("rule %s %s", id, map[bool]string{true: "on", false: "off"}[in.Enabled]))
+	s.store.Log(a.Username, "domain", map[bool]string{true: "rule_on", false: "rule_off"}[in.Enabled], id)
 	return ok(w, nil)
 }
 
@@ -792,7 +791,7 @@ func (s *Hub) aApprove(w http.ResponseWriter, r *http.Request, a *store.Admin) e
 	if err != nil {
 		return err
 	}
-	s.store.Log(a.Username, "payment", fmt.Sprintf("approved #%d from %s", id, p.Username))
+	s.store.Log(a.Username, "payment", "payment_approved", strconv.FormatInt(id, 10), p.Username)
 	return ok(w, nil)
 }
 
@@ -810,7 +809,7 @@ func (s *Hub) aReject(w http.ResponseWriter, r *http.Request, a *store.Admin) er
 	if err := s.store.DecidePayment(id, store.PayRejected, trimmed(in.Note, 300), a.Username); err != nil {
 		return fail(409, "already_decided", "this receipt was already reviewed")
 	}
-	s.store.Log(a.Username, "payment", fmt.Sprintf("rejected #%d from %s", id, p.Username))
+	s.store.Log(a.Username, "payment", "payment_rejected", strconv.FormatInt(id, 10), p.Username)
 	return ok(w, nil)
 }
 
@@ -837,7 +836,7 @@ func (s *Hub) aCreateGate(w http.ResponseWriter, r *http.Request, a *store.Admin
 	if err != nil {
 		return err
 	}
-	s.store.Log(a.Username, "gate", "added gate "+name)
+	s.store.Log(a.Username, "gate", "gate_added", name)
 	return ok(w, map[string]any{"gate": g, "token": JoinToken(s.info(), g.ID, secret)})
 }
 
@@ -847,7 +846,7 @@ func (s *Hub) aGateToken(w http.ResponseWriter, r *http.Request, a *store.Admin)
 	if err != nil {
 		return errNotFound
 	}
-	s.store.Log(a.Username, "gate", "issued a new join token for "+id)
+	s.store.Log(a.Username, "gate", "gate_token", id)
 	return ok(w, map[string]string{"token": JoinToken(s.info(), id, secret)})
 }
 
@@ -866,7 +865,7 @@ func (s *Hub) aUpdateGate(w http.ResponseWriter, r *http.Request, a *store.Admin
 	if err := s.store.UpdateGate(id, in.Name, in.Enforce); err != nil {
 		return fail(400, "bad_request", err.Error())
 	}
-	s.store.Log(a.Username, "gate", "updated gate "+id)
+	s.store.Log(a.Username, "gate", "gate_updated", id)
 	return ok(w, nil)
 }
 
@@ -876,7 +875,7 @@ func (s *Hub) aDeleteGate(w http.ResponseWriter, r *http.Request, a *store.Admin
 		return errNotFound
 	}
 	s.refreshAllowed()
-	s.store.Log(a.Username, "gate", "removed gate "+id)
+	s.store.Log(a.Username, "gate", "gate_removed", id)
 	return ok(w, nil)
 }
 
@@ -936,7 +935,7 @@ func (s *Hub) aUpdateSettings(w http.ResponseWriter, r *http.Request, a *store.A
 			return err
 		}
 	}
-	s.store.Log(a.Username, "settings", "changed settings")
+	s.store.Log(a.Username, "settings", "settings_changed")
 	return s.aSettings(w, r, a)
 }
 
@@ -967,7 +966,7 @@ func (s *Hub) aCreateAdmin(w http.ResponseWriter, r *http.Request, a *store.Admi
 	if err != nil {
 		return err
 	}
-	s.store.Log(a.Username, "security", "added admin "+na.Username)
+	s.store.Log(a.Username, "security", "admin_added", na.Username)
 	return ok(w, na)
 }
 
@@ -982,7 +981,7 @@ func (s *Hub) aDeleteAdmin(w http.ResponseWriter, r *http.Request, a *store.Admi
 	if err := s.store.DeleteAdmin(id); err != nil {
 		return fail(400, "last_admin", err.Error())
 	}
-	s.store.Log(a.Username, "security", "removed an admin")
+	s.store.Log(a.Username, "security", "admin_removed")
 	return ok(w, nil)
 }
 
@@ -1004,7 +1003,7 @@ func (s *Hub) aBackup(w http.ResponseWriter, r *http.Request, a *store.Admin) er
 	name := "gozar-backup-" + time.Now().Format("2006-01-02-1504") + ".db"
 	w.Header().Set("Content-Type", "application/octet-stream")
 	w.Header().Set("Content-Disposition", `attachment; filename="`+name+`"`)
-	s.store.Log(a.Username, "backup", "downloaded a backup")
+	s.store.Log(a.Username, "backup", "backup_downloaded")
 	_, err = io.Copy(w, f)
 	return err
 }
@@ -1032,7 +1031,7 @@ func (s *Hub) aRestore(w http.ResponseWriter, r *http.Request, a *store.Admin) e
 	if err := s.store.StageRestore(tmp); err != nil {
 		return fail(400, "backup_invalid", err.Error())
 	}
-	s.store.Log(a.Username, "backup", "restored a backup; restarting")
+	s.store.Log(a.Username, "backup", "backup_restored")
 	_ = ok(w, nil)
 	go func() {
 		time.Sleep(time.Second)

@@ -145,7 +145,7 @@ func setupHub(cfgPath string) error {
 		token = hub.JoinToken(&hub.HubInfo{PublicIP: h.PublicIP, ControlPort: h.ControlPort, HTTPSPort: h.HTTPSPort,
 			HTTPPort: h.HTTPPort, Fingerprint: certs.Fingerprint(ctrl)}, g.ID, secret)
 	}
-	st.Log("setup", "setup", "hub configured")
+	st.Log("setup", "setup", "hub_configured")
 
 	step(4, total, "Starting")
 	if err := installService("hub"); err != nil {
