@@ -1,0 +1,1503 @@
+{
+ "version": 1,
+ "categories": [
+  {
+   "id": "games",
+   "name": {
+    "fa": "بازی",
+    "en": "Games"
+   }
+  },
+  {
+   "id": "media",
+   "name": {
+    "fa": "فیلم و موسیقی",
+    "en": "Media"
+   }
+  },
+  {
+   "id": "ai",
+   "name": {
+    "fa": "هوش مصنوعی",
+    "en": "AI"
+   }
+  },
+  {
+   "id": "dev",
+   "name": {
+    "fa": "برنامه‌نویسی",
+    "en": "Developer"
+   }
+  },
+  {
+   "id": "work",
+   "name": {
+    "fa": "کار و آموزش",
+    "en": "Work & learning"
+   }
+  },
+  {
+   "id": "misc",
+   "name": {
+    "fa": "سایر",
+    "en": "Everything else"
+   }
+  }
+ ],
+ "services": [
+  {
+   "id": "playstation",
+   "name": {
+    "fa": "PlayStation",
+    "en": "PlayStation"
+   },
+   "category": "games",
+   "color": "#0070D1",
+   "groups": [
+    {
+     "id": "online",
+     "name": {
+      "fa": "فروشگاه، حساب و بازی آنلاین",
+      "en": "Store, account & online play"
+     },
+     "heavy": false,
+     "domains": [
+      "playstation.com",
+      "playstation.net",
+      "pscdn.co",
+      "sonyentertainmentnetwork.com"
+     ]
+    },
+    {
+     "id": "download",
+     "name": {
+      "fa": "دانلود بازی",
+      "en": "Game downloads"
+     },
+     "heavy": true,
+     "domains": [
+      "gst.prod.dl.playstation.net",
+      "ps5cel.np.dl.playstation.net",
+      "uef.np.dl.playstation.net",
+      "zeus.dl.playstation.net"
+     ]
+    }
+   ]
+  },
+  {
+   "id": "xbox",
+   "name": {
+    "fa": "Xbox",
+    "en": "Xbox"
+   },
+   "category": "games",
+   "color": "#107C10",
+   "groups": [
+    {
+     "id": "online",
+     "name": {
+      "fa": "فروشگاه، حساب و بازی آنلاین",
+      "en": "Store, account & online play"
+     },
+     "heavy": false,
+     "domains": [
+      "edgesuite.net",
+      "gamepass.com",
+      "mp.microsoft.com",
+      "xbox.com",
+      "xboxlive.com"
+     ]
+    },
+    {
+     "id": "download",
+     "name": {
+      "fa": "دانلود بازی",
+      "en": "Game downloads"
+     },
+     "heavy": true,
+     "domains": [
+      "assets1.xboxlive.com",
+      "dl.delivery.mp.microsoft.com",
+      "dlassets.xboxlive.com",
+      "xvcf1.xboxlive.com",
+      "xvcf2.xboxlive.com"
+     ]
+    }
+   ]
+  },
+  {
+   "id": "nintendo",
+   "name": {
+    "fa": "Nintendo",
+    "en": "Nintendo"
+   },
+   "category": "games",
+   "color": "#E60012",
+   "groups": [
+    {
+     "id": "main",
+     "name": {
+      "fa": "همهٔ دامنه‌ها",
+      "en": "Everything"
+     },
+     "heavy": false,
+     "domains": [
+      "nintendo.com",
+      "nintendo.net"
+     ]
+    }
+   ]
+  },
+  {
+   "id": "steam",
+   "name": {
+    "fa": "Steam",
+    "en": "Steam"
+   },
+   "category": "games",
+   "color": "#1B2838",
+   "groups": [
+    {
+     "id": "main",
+     "name": {
+      "fa": "فروشگاه و انجمن",
+      "en": "Store & community"
+     },
+     "heavy": false,
+     "domains": [
+      "steamcommunity.com",
+      "steampowered.com",
+      "steamstatic.com",
+      "valvesoftware.com"
+     ]
+    },
+    {
+     "id": "download",
+     "name": {
+      "fa": "دانلود بازی",
+      "en": "Game downloads"
+     },
+     "heavy": true,
+     "domains": [
+      "steamcontent.com"
+     ]
+    }
+   ]
+  },
+  {
+   "id": "epic",
+   "name": {
+    "fa": "Epic Games",
+    "en": "Epic Games"
+   },
+   "category": "games",
+   "color": "#2A2A2A",
+   "groups": [
+    {
+     "id": "main",
+     "name": {
+      "fa": "فروشگاه، لانچر و حساب",
+      "en": "Store, launcher & account"
+     },
+     "heavy": false,
+     "domains": [
+      "epicgames.com",
+      "unrealengine.com"
+     ]
+    }
+   ]
+  },
+  {
+   "id": "ea",
+   "name": {
+    "fa": "EA",
+    "en": "EA"
+   },
+   "category": "games",
+   "color": "#FF4747",
+   "groups": [
+    {
+     "id": "main",
+     "name": {
+      "fa": "همهٔ دامنه‌ها",
+      "en": "Everything"
+     },
+     "heavy": false,
+     "domains": [
+      "apexlegends.com",
+      "battlefield.com",
+      "bioware.com",
+      "criteriongames.com",
+      "dice.se",
+      "ea.com",
+      "eaaccess.com",
+      "eaassets-a.akamaihd.net",
+      "eacdn.com",
+      "eamobile.com",
+      "eaplay.com",
+      "easports.com",
+      "fcmobile.com",
+      "frostbite.com",
+      "maxis.com",
+      "needforspeed.com",
+      "origin.com",
+      "popcap.com",
+      "respawn.com",
+      "swtor.com",
+      "thesims.com"
+     ]
+    }
+   ]
+  },
+  {
+   "id": "blizzard",
+   "name": {
+    "fa": "Blizzard / Activision",
+    "en": "Blizzard / Activision"
+   },
+   "category": "games",
+   "color": "#148EFF",
+   "groups": [
+    {
+     "id": "main",
+     "name": {
+      "fa": "همهٔ دامنه‌ها",
+      "en": "Everything"
+     },
+     "heavy": false,
+     "domains": [
+      "activision.com",
+      "battle.net",
+      "blizzard.com",
+      "callofduty.com"
+     ]
+    }
+   ]
+  },
+  {
+   "id": "ubisoft",
+   "name": {
+    "fa": "Ubisoft",
+    "en": "Ubisoft"
+   },
+   "category": "games",
+   "color": "#0070FF",
+   "groups": [
+    {
+     "id": "main",
+     "name": {
+      "fa": "همهٔ دامنه‌ها",
+      "en": "Everything"
+     },
+     "heavy": false,
+     "domains": [
+      "ubi.com",
+      "ubisoft.com"
+     ]
+    }
+   ]
+  },
+  {
+   "id": "riot",
+   "name": {
+    "fa": "Riot Games",
+    "en": "Riot Games"
+   },
+   "category": "games",
+   "color": "#D32936",
+   "groups": [
+    {
+     "id": "main",
+     "name": {
+      "fa": "همهٔ دامنه‌ها",
+      "en": "Everything"
+     },
+     "heavy": false,
+     "domains": [
+      "leagueoflegends.com",
+      "riotgames.com",
+      "valorant.com"
+     ]
+    }
+   ]
+  },
+  {
+   "id": "rockstar",
+   "name": {
+    "fa": "Rockstar",
+    "en": "Rockstar"
+   },
+   "category": "games",
+   "color": "#FCAF17",
+   "groups": [
+    {
+     "id": "main",
+     "name": {
+      "fa": "همهٔ دامنه‌ها",
+      "en": "Everything"
+     },
+     "heavy": false,
+     "domains": [
+      "rockstargames.com",
+      "take2games.com"
+     ]
+    }
+   ]
+  },
+  {
+   "id": "bethesda",
+   "name": {
+    "fa": "Bethesda",
+    "en": "Bethesda"
+   },
+   "category": "games",
+   "color": "#3B3B3B",
+   "groups": [
+    {
+     "id": "main",
+     "name": {
+      "fa": "همهٔ دامنه‌ها",
+      "en": "Everything"
+     },
+     "heavy": false,
+     "domains": [
+      "bethesda.net"
+     ]
+    }
+   ]
+  },
+  {
+   "id": "gog",
+   "name": {
+    "fa": "GOG / itch.io",
+    "en": "GOG / itch.io"
+   },
+   "category": "games",
+   "color": "#86328A",
+   "groups": [
+    {
+     "id": "main",
+     "name": {
+      "fa": "همهٔ دامنه‌ها",
+      "en": "Everything"
+     },
+     "heavy": false,
+     "domains": [
+      "gog.com",
+      "humblebundle.com",
+      "itch.io"
+     ]
+    }
+   ]
+  },
+  {
+   "id": "roblox",
+   "name": {
+    "fa": "Roblox",
+    "en": "Roblox"
+   },
+   "category": "games",
+   "color": "#E2231A",
+   "groups": [
+    {
+     "id": "main",
+     "name": {
+      "fa": "همهٔ دامنه‌ها",
+      "en": "Everything"
+     },
+     "heavy": false,
+     "domains": [
+      "rbxcdn.com",
+      "roblox.com"
+     ]
+    }
+   ]
+  },
+  {
+   "id": "minecraft",
+   "name": {
+    "fa": "Minecraft",
+    "en": "Minecraft"
+   },
+   "category": "games",
+   "color": "#62B47A",
+   "groups": [
+    {
+     "id": "main",
+     "name": {
+      "fa": "همهٔ دامنه‌ها",
+      "en": "Everything"
+     },
+     "heavy": false,
+     "domains": [
+      "minecraft.net",
+      "minecraftservices.com",
+      "mojang.com"
+     ]
+    }
+   ]
+  },
+  {
+   "id": "othergames",
+   "name": {
+    "fa": "بازی‌های دیگر",
+    "en": "More games"
+   },
+   "category": "games",
+   "color": "",
+   "groups": [
+    {
+     "id": "main",
+     "name": {
+      "fa": "همهٔ دامنه‌ها",
+      "en": "Everything"
+     },
+     "heavy": false,
+     "domains": [
+      "battlecode.org",
+      "faceit.com",
+      "garena.com",
+      "hoyoverse.com",
+      "incredibuild.com",
+      "krafton.com",
+      "mihoyo.com",
+      "pubg.com",
+      "supercell.com",
+      "unity.com",
+      "unity3d.com",
+      "vuforia.com"
+     ]
+    }
+   ]
+  },
+  {
+   "id": "netflix",
+   "name": {
+    "fa": "Netflix",
+    "en": "Netflix"
+   },
+   "category": "media",
+   "color": "#E50914",
+   "groups": [
+    {
+     "id": "main",
+     "name": {
+      "fa": "همهٔ دامنه‌ها",
+      "en": "Everything"
+     },
+     "heavy": false,
+     "domains": [
+      "netflix.com",
+      "nflxext.com",
+      "nflximg.net",
+      "nflxvideo.net"
+     ]
+    }
+   ]
+  },
+  {
+   "id": "twitch",
+   "name": {
+    "fa": "Twitch",
+    "en": "Twitch"
+   },
+   "category": "media",
+   "color": "#9146FF",
+   "groups": [
+    {
+     "id": "main",
+     "name": {
+      "fa": "همهٔ دامنه‌ها",
+      "en": "Everything"
+     },
+     "heavy": false,
+     "domains": [
+      "ttvnw.net",
+      "twitch.tv"
+     ]
+    }
+   ]
+  },
+  {
+   "id": "spotify",
+   "name": {
+    "fa": "Spotify",
+    "en": "Spotify"
+   },
+   "category": "media",
+   "color": "#1DB954",
+   "groups": [
+    {
+     "id": "main",
+     "name": {
+      "fa": "همهٔ دامنه‌ها",
+      "en": "Everything"
+     },
+     "heavy": false,
+     "domains": [
+      "scdn.co",
+      "spotify.com"
+     ]
+    }
+   ]
+  },
+  {
+   "id": "openai",
+   "name": {
+    "fa": "ChatGPT",
+    "en": "OpenAI / ChatGPT"
+   },
+   "category": "ai",
+   "color": "#10A37F",
+   "groups": [
+    {
+     "id": "main",
+     "name": {
+      "fa": "همهٔ دامنه‌ها",
+      "en": "Everything"
+     },
+     "heavy": false,
+     "domains": [
+      "chatgpt.com",
+      "oaistatic.com",
+      "oaiusercontent.com",
+      "openai.com"
+     ]
+    }
+   ]
+  },
+  {
+   "id": "anthropic",
+   "name": {
+    "fa": "Claude",
+    "en": "Claude"
+   },
+   "category": "ai",
+   "color": "#D97757",
+   "groups": [
+    {
+     "id": "main",
+     "name": {
+      "fa": "همهٔ دامنه‌ها",
+      "en": "Everything"
+     },
+     "heavy": false,
+     "domains": [
+      "anthropic.com",
+      "claude.ai"
+     ]
+    }
+   ]
+  },
+  {
+   "id": "otherai",
+   "name": {
+    "fa": "هوش مصنوعی دیگر",
+    "en": "More AI tools"
+   },
+   "category": "ai",
+   "color": "",
+   "groups": [
+    {
+     "id": "main",
+     "name": {
+      "fa": "همهٔ دامنه‌ها",
+      "en": "Everything"
+     },
+     "heavy": false,
+     "domains": [
+      "codeium.com",
+      "cursor.com",
+      "cursor.sh",
+      "deepmind.google",
+      "deepseek.com",
+      "groq.com",
+      "hf.co",
+      "huggingface.co",
+      "kaggle.com",
+      "kaggle.net",
+      "kaggleusercontent.com",
+      "mistral.ai",
+      "ollama.com",
+      "openrouter.ai",
+      "perplexity.ai",
+      "tensorflow.org",
+      "together.ai",
+      "windsurf.com",
+      "x.ai"
+     ]
+    }
+   ]
+  },
+  {
+   "id": "github",
+   "name": {
+    "fa": "GitHub",
+    "en": "GitHub"
+   },
+   "category": "dev",
+   "color": "#24292F",
+   "groups": [
+    {
+     "id": "main",
+     "name": {
+      "fa": "همهٔ دامنه‌ها",
+      "en": "Everything"
+     },
+     "heavy": false,
+     "domains": [
+      "github.com",
+      "githubapp.com",
+      "githubassets.com",
+      "githubusercontent.com"
+     ]
+    }
+   ]
+  },
+  {
+   "id": "gitlab",
+   "name": {
+    "fa": "GitLab / Bitbucket",
+    "en": "GitLab / Bitbucket"
+   },
+   "category": "dev",
+   "color": "#FC6D26",
+   "groups": [
+    {
+     "id": "main",
+     "name": {
+      "fa": "همهٔ دامنه‌ها",
+      "en": "Everything"
+     },
+     "heavy": false,
+     "domains": [
+      "bitbucket.org",
+      "gitkraken.com",
+      "gitlab-static.net",
+      "gitlab.com",
+      "gitlab.io",
+      "gitpod.io"
+     ]
+    }
+   ]
+  },
+  {
+   "id": "docker",
+   "name": {
+    "fa": "Docker / Kubernetes",
+    "en": "Docker / Kubernetes"
+   },
+   "category": "dev",
+   "color": "#2496ED",
+   "groups": [
+    {
+     "id": "main",
+     "name": {
+      "fa": "همهٔ دامنه‌ها",
+      "en": "Everything"
+     },
+     "heavy": false,
+     "domains": [
+      "docker.com",
+      "docker.io",
+      "gcr.io",
+      "ghcr.io",
+      "helm.sh",
+      "k8s.io",
+      "kubernetes.io",
+      "quay.io",
+      "registry.k8s.io"
+     ]
+    }
+   ]
+  },
+  {
+   "id": "packages",
+   "name": {
+    "fa": "مخازن پکیج",
+    "en": "Package registries"
+   },
+   "category": "dev",
+   "color": "",
+   "groups": [
+    {
+     "id": "main",
+     "name": {
+      "fa": "همهٔ دامنه‌ها",
+      "en": "Everything"
+     },
+     "heavy": false,
+     "domains": [
+      "archive.ubuntu.com",
+      "bintray.com",
+      "centos.org",
+      "chocolatey.org",
+      "crates.io",
+      "fsdn.com",
+      "go.dev",
+      "godoc.org",
+      "golang.org",
+      "gopkg.in",
+      "gradle.org",
+      "jfrog.io",
+      "jfrog.org",
+      "jitpack.io",
+      "labix.org",
+      "launchpad.net",
+      "libraries.io",
+      "maas.io",
+      "maven.google.com",
+      "maven.org",
+      "npmjs.com",
+      "npmjs.org",
+      "nuget.org",
+      "packagesource.com",
+      "packagist.org",
+      "pkg.go.dev",
+      "pnpm.io",
+      "pypi.org",
+      "rubygems.org",
+      "sonatype.org",
+      "yarnpkg.com",
+      "yarnpkg.org"
+     ]
+    }
+   ]
+  },
+  {
+   "id": "microsoft",
+   "name": {
+    "fa": "Microsoft / VS Code",
+    "en": "Microsoft / VS Code"
+   },
+   "category": "dev",
+   "color": "#00A4EF",
+   "groups": [
+    {
+     "id": "main",
+     "name": {
+      "fa": "همهٔ دامنه‌ها",
+      "en": "Everything"
+     },
+     "heavy": false,
+     "domains": [
+      "aka.ms",
+      "code.visualstudio.com",
+      "dotnet.microsoft.com",
+      "gallerycdn.vsassets.io",
+      "learn.microsoft.com",
+      "marketplace.visualstudio.com",
+      "visualstudio.microsoft.com",
+      "vscode-cdn.net",
+      "vscode.dev"
+     ]
+    }
+   ]
+  },
+  {
+   "id": "jetbrains",
+   "name": {
+    "fa": "JetBrains",
+    "en": "JetBrains"
+   },
+   "category": "dev",
+   "color": "#FE2857",
+   "groups": [
+    {
+     "id": "main",
+     "name": {
+      "fa": "همهٔ دامنه‌ها",
+      "en": "Everything"
+     },
+     "heavy": false,
+     "domains": [
+      "jetbrains.com"
+     ]
+    }
+   ]
+  },
+  {
+   "id": "adobe",
+   "name": {
+    "fa": "Adobe",
+    "en": "Adobe"
+   },
+   "category": "work",
+   "color": "#FA0F00",
+   "groups": [
+    {
+     "id": "main",
+     "name": {
+      "fa": "همهٔ دامنه‌ها",
+      "en": "Everything"
+     },
+     "heavy": false,
+     "domains": [
+      "adobe.com",
+      "adobelogin.com"
+     ]
+    }
+   ]
+  },
+  {
+   "id": "nvidia",
+   "name": {
+    "fa": "NVIDIA",
+    "en": "NVIDIA"
+   },
+   "category": "misc",
+   "color": "#76B900",
+   "groups": [
+    {
+     "id": "main",
+     "name": {
+      "fa": "همهٔ دامنه‌ها",
+      "en": "Everything"
+     },
+     "heavy": false,
+     "domains": [
+      "geforce.com",
+      "nvidia.com"
+     ]
+    }
+   ]
+  },
+  {
+   "id": "apple",
+   "name": {
+    "fa": "Apple",
+    "en": "Apple"
+   },
+   "category": "misc",
+   "color": "#555555",
+   "groups": [
+    {
+     "id": "main",
+     "name": {
+      "fa": "همهٔ دامنه‌ها",
+      "en": "Everything"
+     },
+     "heavy": false,
+     "domains": [
+      "apple.com"
+     ]
+    }
+   ]
+  },
+  {
+   "id": "google",
+   "name": {
+    "fa": "Google",
+    "en": "Google"
+   },
+   "category": "misc",
+   "color": "#4285F4",
+   "groups": [
+    {
+     "id": "main",
+     "name": {
+      "fa": "همهٔ دامنه‌ها",
+      "en": "Everything"
+     },
+     "heavy": false,
+     "domains": [
+      "accounts.google.com",
+      "ads.google.com",
+      "adservice.google.com",
+      "ai.google",
+      "aistudio.google.com",
+      "analytics.google.com",
+      "apis.google.com",
+      "appengine.google.com",
+      "apps.admob.com",
+      "books.google.com",
+      "business.google.com",
+      "classroom.google.com",
+      "clients.google.com",
+      "clients2.google.com",
+      "clients6.google.com",
+      "cloud.google.com",
+      "code.google.com",
+      "colab.research.google.com",
+      "design.google.com",
+      "developer.google.com",
+      "developers.google.com",
+      "dl-ssl.google.com",
+      "dl.google.com",
+      "dns.google.com",
+      "domains.google.com",
+      "doubleclick.net",
+      "doubleclickbygoogle.com",
+      "events.google.com",
+      "fiber.google.com",
+      "firebase.google.com",
+      "gemini.google.com",
+      "google-analytics.com",
+      "google.ai",
+      "googleadservices.com",
+      "googleapis.com",
+      "googleblog.com",
+      "googlesource.com",
+      "googletagmanager.com",
+      "googletagservices.com",
+      "googleusercontent.com",
+      "gstatic.com",
+      "issuetracker.google.com",
+      "labs.google",
+      "marketingplantform.google.com",
+      "notebooklm.google.com",
+      "optimize.google.com",
+      "payments.google.com",
+      "play.google.com",
+      "storage.googleapis.com",
+      "surveys.google.com",
+      "tagmanager.google.com",
+      "withgoogle.com"
+     ]
+    }
+   ]
+  },
+  {
+   "id": "discord",
+   "name": {
+    "fa": "Discord",
+    "en": "Discord"
+   },
+   "category": "work",
+   "color": "#5865F2",
+   "groups": [
+    {
+     "id": "main",
+     "name": {
+      "fa": "همهٔ دامنه‌ها",
+      "en": "Everything"
+     },
+     "heavy": false,
+     "domains": [
+      "discord.com",
+      "discord.gg",
+      "discordapp.com",
+      "discordapp.net"
+     ]
+    }
+   ]
+  },
+  {
+   "id": "slackzoom",
+   "name": {
+    "fa": "Slack / Zoom / Teams",
+    "en": "Slack / Zoom / Teams"
+   },
+   "category": "work",
+   "color": "#4A154B",
+   "groups": [
+    {
+     "id": "main",
+     "name": {
+      "fa": "همهٔ دامنه‌ها",
+      "en": "Everything"
+     },
+     "heavy": false,
+     "domains": [
+      "jitsi.org",
+      "slack-edge.com",
+      "slack.com",
+      "zoom.us"
+     ]
+    }
+   ]
+  },
+  {
+   "id": "figma",
+   "name": {
+    "fa": "Figma / Canva / Notion",
+    "en": "Figma / Canva / Notion"
+   },
+   "category": "work",
+   "color": "#A259FF",
+   "groups": [
+    {
+     "id": "main",
+     "name": {
+      "fa": "همهٔ دامنه‌ها",
+      "en": "Everything"
+     },
+     "heavy": false,
+     "domains": [
+      "asana.com",
+      "canva.com",
+      "figma.com",
+      "invis.io",
+      "linear.app",
+      "miro.com",
+      "notion.so",
+      "trello.com",
+      "zeplin.io"
+     ]
+    }
+   ]
+  },
+  {
+   "id": "cloud",
+   "name": {
+    "fa": "کلاود و هاستینگ",
+    "en": "Cloud & hosting"
+   },
+   "category": "dev",
+   "color": "",
+   "groups": [
+    {
+     "id": "main",
+     "name": {
+      "fa": "همهٔ دامنه‌ها",
+      "en": "Everything"
+     },
+     "heavy": false,
+     "domains": [
+      "appspot.com",
+      "aws.amazon.com",
+      "bluemix.net",
+      "c9.io",
+      "cloudflare.com",
+      "cloudfront.net",
+      "cocalc.com",
+      "codesandbox.io",
+      "csb.app",
+      "digitalocean.com",
+      "download.virtualbox.org",
+      "es.io",
+      "firebase.com",
+      "fly.io",
+      "heroku.com",
+      "hetzner.com",
+      "ibm.com",
+      "java.com",
+      "linode.com",
+      "netlify.app",
+      "netlify.com",
+      "oracle.com",
+      "railway.app",
+      "render.com",
+      "replit.com",
+      "softlayer.com",
+      "sparkjava.com",
+      "supabase.com",
+      "vercel.app",
+      "vercel.com",
+      "virtualbox.org",
+      "vmware.com",
+      "zeit.co"
+     ]
+    }
+   ]
+  },
+  {
+   "id": "education",
+   "name": {
+    "fa": "آموزش و مرجع",
+    "en": "Learning & reference"
+   },
+   "category": "work",
+   "color": "",
+   "groups": [
+    {
+     "id": "main",
+     "name": {
+      "fa": "همهٔ دامنه‌ها",
+      "en": "Everything"
+     },
+     "heavy": false,
+     "domains": [
+      "acm.org",
+      "arxiv.org",
+      "baeldung.com",
+      "cljdoc.org",
+      "codex.cs.yale.edu",
+      "coursehero.com",
+      "coursera-apps.org",
+      "coursera.com",
+      "coursera.org",
+      "datacamp.com",
+      "edx.org",
+      "fluttercrashcourse.com",
+      "flutterlearn.com",
+      "freecodecamp.org",
+      "goanimate.com",
+      "grabcad.com",
+      "hackerrank.com",
+      "ieee.org",
+      "jenkov.com",
+      "khanacademy.org",
+      "mathworks.com",
+      "medium.com",
+      "mit.edu",
+      "mybridge.co",
+      "overleaf.com",
+      "packtpub.com",
+      "piles.overleaf.com",
+      "proandroiddev.com",
+      "researchgate.net",
+      "sciencedirect.com",
+      "serverfault.com",
+      "spiceworks.com",
+      "springer.com",
+      "stackexchange.com",
+      "stackoverflow.com",
+      "superuser.com",
+      "teamtreehouse.com",
+      "udemy.com",
+      "udemycdn-a.com",
+      "udemycdn.com",
+      "wikia.com",
+      "wolframalpha.com"
+     ]
+    }
+   ]
+  },
+  {
+   "id": "hardware",
+   "name": {
+    "fa": "سخت‌افزار و درایور",
+    "en": "Hardware & drivers"
+   },
+   "category": "misc",
+   "color": "",
+   "groups": [
+    {
+     "id": "main",
+     "name": {
+      "fa": "همهٔ دامنه‌ها",
+      "en": "Everything"
+     },
+     "heavy": false,
+     "domains": [
+      "altera.com",
+      "amd.com",
+      "android.com",
+      "anydesk.com",
+      "arduino.cc",
+      "bitvise.com",
+      "cisco.com",
+      "clamav.net",
+      "dell.com",
+      "developer.samsung.com",
+      "digikey.com",
+      "download.01.org",
+      "element14.com",
+      "espressif.com",
+      "intel.com",
+      "lenovo.com",
+      "microchip.com",
+      "ni.com",
+      "nirsoft.net",
+      "qualcomm.com",
+      "raspberrypi.com",
+      "softonic.com",
+      "st.com",
+      "sun.com",
+      "teamviewer.com",
+      "ti.com",
+      "xilinx.com"
+     ]
+    }
+   ]
+  },
+  {
+   "id": "finance",
+   "name": {
+    "fa": "پرداخت و مالی",
+    "en": "Payments & finance"
+   },
+   "category": "misc",
+   "color": "",
+   "groups": [
+    {
+     "id": "main",
+     "name": {
+      "fa": "همهٔ دامنه‌ها",
+      "en": "Everything"
+     },
+     "heavy": false,
+     "domains": [
+      "coinbase.com",
+      "demandbase.com",
+      "en25.com",
+      "mailgun.com",
+      "paypal.com",
+      "paypalobjects.com",
+      "salesforce.com",
+      "sendgrid.com",
+      "stripe.com",
+      "upwork.com"
+     ]
+    }
+   ]
+  },
+  {
+   "id": "webdev",
+   "name": {
+    "fa": "ابزار وب و فریم‌ورک",
+    "en": "Web tooling"
+   },
+   "category": "dev",
+   "color": "",
+   "groups": [
+    {
+     "id": "main",
+     "name": {
+      "fa": "همهٔ دامنه‌ها",
+      "en": "Everything"
+     },
+     "heavy": false,
+     "domains": [
+      "algolia.com",
+      "algolia.net",
+      "amp.dev",
+      "ant.design",
+      "apache.org",
+      "arcgis.com",
+      "atlassian.com",
+      "atlassian.net",
+      "b4x.com",
+      "beans.org",
+      "bit.dev",
+      "bitsrc.io",
+      "bootstrapcdn.com",
+      "bootswatch.com",
+      "bun.sh",
+      "caddy.com",
+      "caddyserver.com",
+      "cloudera.com",
+      "codecov.io",
+      "curd.io",
+      "dartlang.org",
+      "deno.land",
+      "developer.chrome.com",
+      "docs.datastax.com",
+      "elastic.co",
+      "enterprisedb.com",
+      "eslint.org",
+      "explainshell.com",
+      "expressjs.com",
+      "flutter.dev",
+      "flutter.io",
+      "forums.cpanel.net",
+      "gallery.io",
+      "getbootstrap.com",
+      "getcaddy.com",
+      "godbolt.org",
+      "grafana.com",
+      "graphql.org",
+      "hashicorp.com",
+      "hyper.is",
+      "i.stack.imgur.com",
+      "i18next.com",
+      "jaspersoft.com",
+      "javacardos.com",
+      "jenkins-ci.org",
+      "jenkins.org",
+      "jhipster.tech",
+      "jungle.net",
+      "laravel.com",
+      "material.io",
+      "mbed.com",
+      "metasploit.com",
+      "mongodb.com",
+      "mongodb.org",
+      "mysql.com",
+      "nativescript.org",
+      "nextjs.org",
+      "nginx.com",
+      "nodejs.org",
+      "php.net",
+      "polymer-project.org",
+      "postman.com",
+      "python.org",
+      "qt.io",
+      "rapid7.com",
+      "reactjs.org",
+      "realm.io",
+      "releases.hashicorp.com",
+      "ruby-doc.org",
+      "rust-lang.org",
+      "schema.org",
+      "seleniumhq.org",
+      "serialport.io",
+      "socket.io",
+      "sonarsource.com",
+      "splunk.com",
+      "spring.io",
+      "sstatic.net",
+      "swaggerhub.com",
+      "swift.org",
+      "symfony.com",
+      "telerik.com",
+      "terraform.io",
+      "traviscistatus.com",
+      "vagrantup.com",
+      "vuejs.org",
+      "vuetifyjs.com",
+      "web.dev"
+     ]
+    }
+   ]
+  },
+  {
+   "id": "assets",
+   "name": {
+    "fa": "تصویر، فونت و قالب",
+    "en": "Images, fonts & themes"
+   },
+   "category": "work",
+   "color": "",
+   "groups": [
+    {
+     "id": "main",
+     "name": {
+      "fa": "همهٔ دامنه‌ها",
+      "en": "Everything"
+     },
+     "heavy": false,
+     "domains": [
+      "3docean.net",
+      "codecanyon.net",
+      "cp.maxcdn.com",
+      "envato-static.com",
+      "envato.com",
+      "graphicriver.net",
+      "gravatar.com",
+      "justpaste.it",
+      "jwplayer.com",
+      "myfonts.net",
+      "photodune.net",
+      "themeforest.net",
+      "tinyjpg.com",
+      "tinypng.com",
+      "toggl.com",
+      "unsplash.com",
+      "videohive.net",
+      "vmcdn.com",
+      "wpastra.com"
+     ]
+    }
+   ]
+  },
+  {
+   "id": "analytics",
+   "name": {
+    "fa": "تحلیل و تبلیغات",
+    "en": "Analytics & ads"
+   },
+   "category": "misc",
+   "color": "",
+   "groups": [
+    {
+     "id": "main",
+     "name": {
+      "fa": "همهٔ دامنه‌ها",
+      "en": "Everything"
+     },
+     "heavy": false,
+     "domains": [
+      "branch.io",
+      "bugsnag.com",
+      "count.ly",
+      "crashlytics.com",
+      "expo.io",
+      "fabric.io",
+      "fbsbx.com",
+      "flurry.com",
+      "fodev.org",
+      "lightstep.com",
+      "livefyre.com",
+      "newrelic.com",
+      "optimizely.com",
+      "parsely.com",
+      "sentry.io"
+     ]
+    }
+   ]
+  }
+ ],
+ "rules": [
+  {
+   "id": "ea-game-servers",
+   "action": "direct",
+   "title": {
+    "fa": "سرورهای بازی EA",
+    "en": "EA game servers"
+   },
+   "why": {
+    "fa": "این سرویس‌ها روی پورت ۴۴۳ نیستند؛ عبور دادنشان بازی را از سرور جدا می‌کند.",
+    "en": "These run on ports other than 443; routing them disconnects EA games."
+   },
+   "domains": [
+    "blaze.ea.com",
+    "gameservices.ea.com",
+    "gosredirector.ea.com",
+    "tnt-ea.com"
+   ]
+  },
+  {
+   "id": "psn-stun",
+   "action": "direct",
+   "title": {
+    "fa": "STUN و API پلی‌استیشن",
+    "en": "PlayStation STUN & API"
+   },
+   "why": {
+    "fa": "مستقیم در دسترس است و عبور دادنش تشخیص NAT کنسول را خراب می‌کند.",
+    "en": "Reachable directly; routing it breaks the console's NAT detection."
+   },
+   "domains": [
+    "np.dl.playstation.net",
+    "np.playstation.net"
+   ]
+  },
+  {
+   "id": "epic-backend",
+   "action": "pin",
+   "title": {
+    "fa": "بک‌اند بازی Epic",
+    "en": "Epic game backend"
+   },
+   "why": {
+    "fa": "مچ‌میکینگ باید از همان آدرس بازیکن بیاید. فقط آدرس‌هایی که از داخل جواب می‌دهند برگردانده می‌شوند.",
+    "en": "Matchmaking must come from the player's own address. Only addresses that answer from here are returned."
+   },
+   "domains": [
+    "account-public-service-prod.ol.epicgames.com",
+    "data-asset-directory-public-service-prod.ol.epicgames.com",
+    "datarouter.ol.epicgames.com",
+    "datastorage-public-service-live.ol.epicgames.com",
+    "ds.svc.live.fngw.ol.epicgames.com",
+    "events-public-service-live.ol.epicgames.com",
+    "fn-service-discovery-live-public.ogs.live.on.epicgames.com",
+    "fn-service-habanero-live-public.ogs.live.on.epicgames.com",
+    "fngw-svc-ds-livefn.ol.epicgames.com",
+    "fortnite-public-service-prod11.ol.epicgames.com",
+    "fortnitecontent-website-prod07.ol.epicgames.com",
+    "gc.svc.live.fngw.ol.epicgames.com",
+    "launcher-public-service-prod06.ol.epicgames.com",
+    "links-public-service-live.ol.epicgames.com",
+    "mcp-gc.live.fngw.ol.epicgames.com",
+    "prm-dialogue-public-api-prod.edea.live.use1a.on.epicgames.com"
+   ]
+  },
+  {
+   "id": "azure-storage",
+   "action": "direct",
+   "title": {
+    "fa": "فضای ذخیره‌سازی Azure",
+    "en": "Azure storage"
+   },
+   "why": {
+    "fa": "SNI این دامنه در مسیر خراب می‌شود؛ مستقیم بهتر کار می‌کند.",
+    "en": "Its handshake gets mangled in transit; direct works better."
+   },
+   "domains": [
+    "core.windows.net"
+   ]
+  }
+ ]
+}

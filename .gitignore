@@ -1,0 +1,9 @@
+/dist/
+/bin/
+node_modules/
+/web/.vite/
+internal/web/dist/*/*
+!internal/web/dist/*/.keep
+*.db
+*.exe
+.DS_Store
