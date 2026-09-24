@@ -513,7 +513,9 @@ func cmdUpdate(a []string) error {
 		asset := "gozar-linux-" + runtime.GOARCH
 		base := "https://github.com/" + buildinfo.Repo + "/releases/latest/download/"
 		info("downloading %s ...", asset)
-		tmp, err := os.CreateTemp("", "gozar-update-*")
+		// Next to the installed binary rather than in /tmp, which is often
+		// mounted noexec - the new file has to run once before it is trusted.
+		tmp, err := os.CreateTemp(filepath.Dir(binPath), ".gozar-update-*")
 		if err != nil {
 			return err
 		}
@@ -532,6 +534,9 @@ func cmdUpdate(a []string) error {
 		}
 		okf("checksum verified")
 		src = tmp.Name()
+	}
+	if err := os.Chmod(src, 0o755); err != nil {
+		return err
 	}
 	out, err := exec.Command(src, "version").Output()
 	if err != nil || !strings.HasPrefix(string(out), "gozar ") {

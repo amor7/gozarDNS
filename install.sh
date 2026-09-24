@@ -61,6 +61,12 @@ chmod 0755 "$TMP/gozar"
 install -m 0755 "$TMP/gozar" "$BIN"
 say "installed $("$BIN" version)"
 
+# Already set up here: this was an upgrade, so restart onto the new binary.
+if [ -f /etc/gozar/config.json ] && command -v systemctl >/dev/null && systemctl is-enabled --quiet gozar 2>/dev/null; then
+  systemctl restart gozar && say "gozar restarted on the new version"
+  exit 0
+fi
+
 if [ "${GOZAR_NO_SETUP:-}" = 1 ]; then
   say "skipping setup (GOZAR_NO_SETUP=1). Run: sudo gozar setup"
   exit 0
