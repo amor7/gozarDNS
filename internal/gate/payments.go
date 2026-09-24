@@ -10,6 +10,9 @@ import (
 	"net/http"
 	"net/url"
 	"regexp"
+	"sort"
+	"strconv"
+	"strings"
 	"time"
 
 	"github.com/amor7/gozarDNS/internal/proto"
@@ -21,7 +24,7 @@ var (
 	IDPayBase       = "https://api.idpay.ir/v1.1"
 	ZarinpalBase    = "https://payment.zarinpal.com"
 	ZarinpalSandbox = "https://sandbox.zarinpal.com"
-	PayPingBase     = "https://api.payping.ir/v2"
+	PayPingBase     = "https://api.payping.ir/v3"
 
 	// PayClient calls the gateways.
 	PayClient = &http.Client{Timeout: 20 * time.Second}
@@ -196,6 +199,9 @@ func (g zarinpal) verify(ctx context.Context, o *proto.PayOrder, f url.Values) (
 
 // ---------------------------------------------------------------- PayPing
 
+// PayPing v3. The customer comes back with a POST whose "data" field is a
+// JSON document naming the payment; older integrations got the same values
+// as plain form fields (refid, clientrefid), so both are read.
 type payping struct{}
 
 func (payping) headers(o *proto.PayOrder) map[string]string {
@@ -213,38 +219,87 @@ func (g payping) create(ctx context.Context, o *proto.PayOrder, callback string)
 	if mobileRe.MatchString(o.Phone) {
 		body["payerIdentity"] = o.Phone
 	}
-	var r struct {
-		Code string `json:"code"`
-	}
+	var r map[string]any
 	if err := postJSON(ctx, PayPingBase+"/pay", g.headers(o), body, &r); err != nil {
 		return "", "", err
 	}
-	if r.Code == "" {
-		return "", "", errors.New("payping returned no payment code")
+	code := field(r, "paymentCode", "code")
+	if code == "" {
+		return "", "", fmt.Errorf("payping returned no payment code: %v", r)
 	}
-	return r.Code, PayPingBase + "/pay/gotoipg/" + r.Code, nil
+	link := field(r, "url")
+	if link == "" {
+		link = PayPingBase + "/pay/start/" + code
+	}
+	return code, link, nil
+}
+
+// field reads the first of names present in m, ignoring case, as a string.
+func field(m map[string]any, names ...string) string {
+	for _, n := range names {
+		for k, v := range m {
+			if strings.EqualFold(k, n) && v != nil {
+				switch x := v.(type) {
+				case string:
+					return x
+				case float64:
+					return strconv.FormatInt(int64(x), 10)
+				default:
+					return fmt.Sprint(x)
+				}
+			}
+		}
+	}
+	return ""
+}
+
+// paypingCallback flattens both callback shapes into one map.
+func paypingCallback(f url.Values) map[string]any {
+	m := map[string]any{}
+	for k := range f {
+		m[k] = f.Get(k)
+	}
+	if d := f.Get("data"); d != "" {
+		var inner map[string]any
+		if json.Unmarshal([]byte(d), &inner) == nil {
+			for k, v := range inner {
+				m[k] = v
+			}
+		}
+	}
+	return m
 }
 
 func (g payping) verify(ctx context.Context, o *proto.PayOrder, f url.Values) (bool, string, error) {
-	refID := f.Get("refid")
-	if f.Get("clientrefid") != o.OrderID {
+	cb := paypingCallback(f)
+	if ref := field(cb, "clientRefId"); ref != o.OrderID {
 		return false, "", errForged
 	}
-	if refID == "" { // no reference: the customer cancelled
-		return false, "", nil
+	if code := field(cb, "paymentCode", "code"); code != "" && code != o.Ref {
+		return false, "", errForged
 	}
-	var v struct {
-		Amount json.Number `json:"amount"`
+	refID := field(cb, "paymentRefId", "refid")
+	if refID == "" {
+		return false, "", notPaid("no payment reference: cancelled at the gateway (status " + field(cb, "status") + ")")
 	}
-	// A 200 answer is PayPing's confirmation; anything else is an error.
-	if err := postJSON(ctx, PayPingBase+"/pay/verify", g.headers(o), map[string]any{"refId": refID, "amount": g.toman(o)}, &v); err != nil {
-		return false, refID, nil
+	var v map[string]any
+	err := postJSON(ctx, PayPingBase+"/pay/verify", g.headers(o), map[string]any{
+		"paymentRefId": refID, "paymentCode": o.Ref, "amount": g.toman(o),
+	}, &v)
+	if err != nil {
+		// PayPing answers a payment it will not confirm with an error status.
+		return false, refID, notPaid("verify refused: " + err.Error())
 	}
-	if a, err := v.Amount.Int64(); err == nil && a != g.toman(o) {
-		return false, refID, nil
+	if a := field(v, "amount"); a != "" && a != strconv.FormatInt(g.toman(o), 10) {
+		return false, refID, notPaid("verified amount " + a + " does not match")
 	}
 	return true, refID, nil
 }
+
+// notPaid is a definite "this payment did not go through", with the reason.
+type notPaid string
+
+func (e notPaid) Error() string { return string(e) }
 
 // ---------------------------------------------------------------- hub calls
 
@@ -374,8 +429,13 @@ func (p *portal) payCallback(w http.ResponseWriter, r *http.Request) {
 	if errors.Is(err, errForged) {
 		// Not about this payment. Ignore it rather than let it cancel
 		// somebody's checkout.
+		p.gt.log.Warn("payment: callback does not match the order", "gateway", o.Gateway, "order", orderID, "fields", formKeys(r.Form))
 		back("fail")
 		return
+	}
+	var np notPaid
+	if errors.As(err, &np) {
+		ok, err = false, nil
 	}
 	if err != nil {
 		// The gateway could not be asked. Leave the order open: the
@@ -387,6 +447,10 @@ func (p *portal) payCallback(w http.ResponseWriter, r *http.Request) {
 	note := ""
 	if !ok {
 		note = "not paid"
+		if np != "" {
+			note = string(np)
+		}
+		p.gt.log.Warn("payment not completed", "gateway", o.Gateway, "order", orderID, "reason", note, "fields", formKeys(r.Form))
 	}
 	if err := p.gt.hubCall(ctx, "/v1/pay/finish", map[string]any{"order_id": orderID, "ok": ok, "track_id": track, "note": note}, nil, nil); err != nil {
 		back("error")
@@ -398,4 +462,15 @@ func (p *portal) payCallback(w http.ResponseWriter, r *http.Request) {
 	} else {
 		back("fail")
 	}
+}
+
+// formKeys names the fields a gateway sent back, for the log. Values stay
+// out: some carry card numbers.
+func formKeys(f url.Values) []string {
+	keys := make([]string, 0, len(f))
+	for k := range f {
+		keys = append(keys, k)
+	}
+	sort.Strings(keys)
+	return keys
 }

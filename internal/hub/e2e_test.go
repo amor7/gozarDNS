@@ -231,8 +231,11 @@ func TestEndToEnd(t *testing.T) {
 			if r.Header.Get("Authorization") != "Bearer pp-token" || in["amount"].(float64) != 150000 {
 				t.Errorf("payping create: %v %v", r.Header.Get("Authorization"), in)
 			}
-			reply(map[string]string{"code": "PPCODE"})
+			reply(map[string]string{"paymentCode": "PPCODE"})
 		case "/pp/pay/verify":
+			if in["paymentRefId"] != "R1" || in["paymentCode"] != "PPCODE" || in["amount"].(float64) != 150000 {
+				t.Errorf("payping verify: %v", in)
+			}
 			verified["payping"]++
 			reply(map[string]any{"amount": 150000, "cardNumber": "6037****1234"})
 		default:
@@ -278,7 +281,7 @@ func TestEndToEnd(t *testing.T) {
 	}{
 		{"idpay", "https://idpay.test/p/idp-1", "POST", url.Values{"status": {"10"}, "id": {"idp-1"}, "order_id": {"gz-1"}, "track_id": {"555"}}, "777"},
 		{"zarinpal", fake.URL + "/zp/pg/StartPay/A0001", "GET", url.Values{"Authority": {"A0001"}, "Status": {"OK"}}, "12345"},
-		{"payping", fake.URL + "/pp/pay/gotoipg/PPCODE", "POST", url.Values{"refid": {"R1"}, "clientrefid": {"gz-3"}}, "R1"},
+		{"payping", fake.URL + "/pp/pay/start/PPCODE", "POST", url.Values{"data": {`{"paymentRefId":"R1","paymentCode":"PPCODE","clientRefId":"gz-3","status":1}`}}, "R1"},
 	}
 	for n, c := range cases {
 		order := "gz-" + strconv.Itoa(n+1)
