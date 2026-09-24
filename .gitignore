@@ -7,3 +7,4 @@ internal/web/dist/*/*
 *.db
 *.exe
 .DS_Store
+/.devstack/

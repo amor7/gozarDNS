@@ -1,0 +1,166 @@
+@import "tailwindcss";
+@import "@fontsource-variable/vazirmatn";
+
+/* Both apps live under src/ and share src/shared; scan all of it. */
+@source "..";
+
+@custom-variant dark (&:where(.dark, .dark *));
+
+/* Design tokens. Every colour in the apps comes from here, so light and dark
+   are one decision each. */
+:root {
+  --bg: #f6f6fb;
+  --bg-glow-1: rgb(124 92 255 / 0.12);
+  --bg-glow-2: rgb(34 211 238 / 0.10);
+  --surface: #ffffff;
+  --surface-2: #f3f2f9;
+  --surface-3: #ebe9f5;
+  --line: #e4e2ef;
+  --line-strong: #d3d0e3;
+  --text: #16151f;
+  --muted: #6b6882;
+  --faint: #9a97ad;
+  --primary: #6d4dff;
+  --primary-2: #0fb5d4;
+  --primary-soft: rgb(109 77 255 / 0.10);
+  --on-primary: #ffffff;
+  --success: #0e9f6e;
+  --success-soft: rgb(14 159 110 / 0.12);
+  --warning: #c77700;
+  --warning-soft: rgb(245 158 11 / 0.14);
+  --danger: #e11d48;
+  --danger-soft: rgb(225 29 72 / 0.10);
+  --info: #2563eb;
+  --info-soft: rgb(37 99 235 / 0.10);
+  --shadow: 0 1px 2px rgb(20 16 40 / 0.04), 0 8px 24px -12px rgb(20 16 40 / 0.12);
+  --shadow-lg: 0 24px 64px -24px rgb(20 16 40 / 0.30);
+  color-scheme: light;
+}
+
+.dark {
+  --bg: #0a0a12;
+  --bg-glow-1: rgb(124 92 255 / 0.20);
+  --bg-glow-2: rgb(34 211 238 / 0.10);
+  --surface: #13131d;
+  --surface-2: #1a1a27;
+  --surface-3: #232334;
+  --line: #262638;
+  --line-strong: #34344a;
+  --text: #eeedf6;
+  --muted: #9b99b3;
+  --faint: #6c6a85;
+  --primary: #8b72ff;
+  --primary-2: #22d3ee;
+  --primary-soft: rgb(139 114 255 / 0.14);
+  --on-primary: #ffffff;
+  --success: #34d399;
+  --success-soft: rgb(52 211 153 / 0.12);
+  --warning: #fbbf24;
+  --warning-soft: rgb(251 191 36 / 0.12);
+  --danger: #fb7185;
+  --danger-soft: rgb(251 113 133 / 0.12);
+  --info: #60a5fa;
+  --info-soft: rgb(96 165 250 / 0.12);
+  --shadow: 0 1px 2px rgb(0 0 0 / 0.3), 0 12px 32px -16px rgb(0 0 0 / 0.6);
+  --shadow-lg: 0 32px 80px -24px rgb(0 0 0 / 0.8);
+  color-scheme: dark;
+}
+
+@theme inline {
+  --font-sans: "Vazirmatn Variable", ui-sans-serif, system-ui, sans-serif;
+  --font-mono: ui-monospace, "SF Mono", "Cascadia Code", Menlo, monospace;
+  --color-bg: var(--bg);
+  --color-surface: var(--surface);
+  --color-surface-2: var(--surface-2);
+  --color-surface-3: var(--surface-3);
+  --color-line: var(--line);
+  --color-line-strong: var(--line-strong);
+  --color-fg: var(--text);
+  --color-muted: var(--muted);
+  --color-faint: var(--faint);
+  --color-primary: var(--primary);
+  --color-primary-2: var(--primary-2);
+  --color-primary-soft: var(--primary-soft);
+  --color-on-primary: var(--on-primary);
+  --color-success: var(--success);
+  --color-success-soft: var(--success-soft);
+  --color-warning: var(--warning);
+  --color-warning-soft: var(--warning-soft);
+  --color-danger: var(--danger);
+  --color-danger-soft: var(--danger-soft);
+  --color-info: var(--info);
+  --color-info-soft: var(--info-soft);
+  --shadow-card: var(--shadow);
+  --shadow-pop: var(--shadow-lg);
+  --animate-in: fade-in 0.22s cubic-bezier(0.2, 0.8, 0.2, 1);
+  --animate-up: slide-up 0.28s cubic-bezier(0.2, 0.8, 0.2, 1);
+  --animate-shimmer: shimmer 1.6s linear infinite;
+}
+
+@keyframes fade-in {
+  from { opacity: 0; transform: translateY(4px) scale(0.99); }
+  to { opacity: 1; transform: none; }
+}
+@keyframes slide-up {
+  from { opacity: 0; transform: translateY(24px); }
+  to { opacity: 1; transform: none; }
+}
+@keyframes shimmer {
+  from { background-position: -200% 0; }
+  to { background-position: 200% 0; }
+}
+
+@layer base {
+  html {
+    font-family: var(--font-sans);
+    -webkit-font-smoothing: antialiased;
+    text-rendering: optimizeLegibility;
+    background: var(--bg);
+    color: var(--text);
+  }
+  body {
+    min-height: 100dvh;
+    background:
+      radial-gradient(1200px 600px at 85% -10%, var(--bg-glow-1), transparent 60%),
+      radial-gradient(900px 500px at -10% 10%, var(--bg-glow-2), transparent 60%),
+      var(--bg);
+    background-attachment: fixed;
+  }
+  ::selection { background: var(--primary-soft); }
+  html { --sel-pos: left 12px center; }
+  html[dir="ltr"] { --sel-pos: right 12px center; }
+  :focus-visible { outline: 2px solid var(--primary); outline-offset: 2px; border-radius: 8px; }
+  input, textarea, select, button { font: inherit; color: inherit; }
+  /* Latin runs inside Persian text (IPs, domains, codes) stay left-to-right. */
+  .ltr { direction: ltr; unicode-bidi: isolate; }
+  .num { font-variant-numeric: tabular-nums; }
+  * { scrollbar-width: thin; scrollbar-color: var(--line-strong) transparent; }
+}
+
+@layer components {
+  .card {
+    background: var(--surface);
+    border: 1px solid var(--line);
+    border-radius: 1.25rem;
+    box-shadow: var(--shadow);
+  }
+  .glass {
+    background: color-mix(in oklab, var(--surface) 78%, transparent);
+    backdrop-filter: blur(18px) saturate(140%);
+    -webkit-backdrop-filter: blur(18px) saturate(140%);
+    border: 1px solid color-mix(in oklab, var(--line) 80%, transparent);
+  }
+  .gradient-text {
+    background: linear-gradient(120deg, var(--primary), var(--primary-2));
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+  }
+  .gradient-bg { background: linear-gradient(135deg, var(--primary), var(--primary-2)); }
+  .skeleton {
+    background: linear-gradient(90deg, var(--surface-2) 0%, var(--surface-3) 50%, var(--surface-2) 100%);
+    background-size: 200% 100%;
+    animation: var(--animate-shimmer);
+    border-radius: 0.75rem;
+  }
+}
