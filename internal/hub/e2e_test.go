@@ -226,54 +226,59 @@ func TestEndToEnd(t *testing.T) {
 	if n := h.tunnelStreams.Load(); n != 3 {
 		t.Fatalf("hub saw %d tunnel streams, want 3", n)
 	}
-	// One customer uploading faster than their service accepts must not
-	// stall everybody else's streams on the shared tunnel.
-	hog, err := net.Dial("tcp", gateCfg.Gate.HTTPSListen)
-	if err != nil {
-		t.Fatal(err)
-	}
-	defer hog.Close()
-	hello := tlsHello(t, "stuck.playstation.com")
-	hog.Write(hello)
-	go func() {
-		junk := make([]byte, 64*1024)
-		for i := 0; i < 160; i++ { // 10 MB the far end never reads
-			if _, err := hog.Write(junk); err != nil {
+	stuckThenSecond := func(mode string) {
+		// One customer uploading faster than their service accepts must not
+		// stall everybody else's streams on the shared tunnel.
+		hog, err := net.Dial("tcp", gateCfg.Gate.HTTPSListen)
+		if err != nil {
+			t.Fatal(err)
+		}
+		defer hog.Close()
+		hello := tlsHello(t, "stuck.playstation.com")
+		hog.Write(hello)
+		go func() {
+			junk := make([]byte, 64*1024)
+			for i := 0; i < 160; i++ { // 10 MB the far end never reads
+				if _, err := hog.Write(junk); err != nil {
+					return
+				}
+			}
+		}()
+		time.Sleep(1500 * time.Millisecond)
+		done := make(chan error, 1)
+		go func() {
+			tc, err := tls.Dial("tcp", gateCfg.Gate.HTTPSListen, &tls.Config{ServerName: "store.playstation.com", InsecureSkipVerify: true})
+			if err != nil {
+				done <- err
 				return
 			}
+			tc.Write([]byte("hello"))
+			got, _ := io.ReadAll(tc)
+			tc.Close()
+			if len(got) != len(payload) {
+				done <- fmt.Errorf("received %d bytes", len(got))
+				return
+			}
+			done <- nil
+		}()
+		select {
+		case err := <-done:
+			if err != nil {
+				t.Fatalf("%s: second customer while the first is stuck: %v", mode, err)
+			}
+		case <-time.After(8 * time.Second):
+			t.Fatalf("%s: one stuck upload blocked other customers", mode)
 		}
-	}()
-	time.Sleep(1500 * time.Millisecond)
-	done := make(chan error, 1)
-	go func() {
-		tc, err := tls.Dial("tcp", gateCfg.Gate.HTTPSListen, &tls.Config{ServerName: "store.playstation.com", InsecureSkipVerify: true})
-		if err != nil {
-			done <- err
-			return
+		if s := gw.Snapshot().Tunnel; mode == "tunnel" && s != "up" {
+			t.Fatalf("tunnel status %q", s)
 		}
-		tc.Write([]byte("hello"))
-		got, _ := io.ReadAll(tc)
-		tc.Close()
-		if len(got) != len(payload) {
-			done <- fmt.Errorf("received %d bytes", len(got))
-			return
-		}
-		done <- nil
-	}()
-	select {
-	case err := <-done:
-		if err != nil {
-			t.Fatalf("second customer while the first is stuck: %v", err)
-		}
-	case <-time.After(8 * time.Second):
-		t.Fatal("a stuck upload on one stream blocked every other stream in the tunnel")
 	}
-	if s := gw.Snapshot().Tunnel; s != "up" {
-		t.Fatalf("tunnel status %q", s)
-	}
+	stuckThenSecond("tunnel")
+
 	tunnelOff := "off"
 	_ = st.UpdateGate(g.ID, nil, nil, &tunnelOff)
 	waitFor(t, func() bool { gw.SyncNow(); return gw.Snapshot().Tunnel == "" })
+	stuckThenSecond("direct")
 
 	// A name outside the plan must not be carried.
 	if c, err := tls.Dial("tcp", gateCfg.Gate.HTTPSListen, &tls.Config{ServerName: "example.org", InsecureSkipVerify: true}); err == nil {
