@@ -15,9 +15,12 @@ export type PublicPlan = {
   services: ServiceBrief[];
 };
 
+export type Contact = { telegram: string; whatsapp: string; bale: string; phone: string; email: string; hours: string };
+
 export type Info = {
   brand: string;
   support: string;
+  contact: Contact;
   notice: string;
   currency: string;
   payment_info: string;

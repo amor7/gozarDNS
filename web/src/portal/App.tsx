@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { NavLink, Navigate, Route, Routes, useLocation } from "react-router";
-import { CloudOff, Compass, CreditCard, House, Languages, Megaphone, Moon, RefreshCw, Sun, UserRound, X, type LucideIcon } from "lucide-react";
+import { CloudOff, Compass, CreditCard, Headset, House, Languages, Megaphone, Moon, RefreshCw, Sun, UserRound, X, type LucideIcon } from "lucide-react";
 import { useI18n } from "@shared/i18n";
 import { useTheme } from "@shared/theme";
 import { Button, cn, IconButton, Lines, LogoMark, PageLoader } from "@shared/ui";
@@ -11,11 +11,13 @@ import { Home } from "./pages/Home";
 import { Setup } from "./pages/Setup";
 import { Plans } from "./pages/Plans";
 import { Account } from "./pages/Account";
+import { hasSupport, Support } from "./pages/Support";
 
-const tabs: { to: string; key: string; icon: LucideIcon }[] = [
+const allTabs: { to: string; key: string; icon: LucideIcon }[] = [
   { to: "/", key: "nav.home", icon: House },
   { to: "/setup", key: "nav.setup", icon: Compass },
   { to: "/plans", key: "nav.plans", icon: CreditCard },
+  { to: "/support", key: "nav.support", icon: Headset },
   { to: "/account", key: "nav.account", icon: UserRound },
 ];
 
@@ -48,6 +50,7 @@ export function App() {
         <Route path="/setup" element={<Setup />} />
         <Route path="/plans" element={<Plans />} />
         <Route path="/account" element={<Account />} />
+        <Route path="/support" element={<Support />} />
         <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
     </Shell>
@@ -110,6 +113,9 @@ function Notice() {
 function Shell({ brand, nav, children }: { brand?: string; nav?: boolean; children: React.ReactNode }) {
   const { t, lang, setLang } = useI18n();
   const { dark, toggle } = useTheme();
+  const info = useInfo().data;
+  // No contact details set: no support tab to find an empty page behind.
+  const tabs = allTabs.filter((x) => x.to !== "/support" || hasSupport(info?.contact, info?.support));
   return (
     <div className={cn("min-h-dvh", nav && "pb-24 sm:pb-10")}>
       <header className="sticky top-0 z-30">
@@ -151,7 +157,7 @@ function Shell({ brand, nav, children }: { brand?: string; nav?: boolean; childr
 
       {nav && (
         <nav className="sm:hidden fixed bottom-0 inset-x-0 z-30 glass border-x-0 border-b-0 pb-[env(safe-area-inset-bottom)]">
-          <div className="grid grid-cols-4 h-16">
+          <div className="flex h-16 [&>a]:flex-1">
             {tabs.map((tab) => (
               <NavLink
                 key={tab.to}

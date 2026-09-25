@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState, type ReactNode } from "react";
-import { useSearchParams } from "react-router";
-import { Check, CreditCard, FileText, ImageUp, Receipt, ShieldCheck } from "lucide-react";
+import { Link, useSearchParams } from "react-router";
+import { Check, CreditCard, FileText, Headset, ImageUp, Receipt, ShieldCheck } from "lucide-react";
 import { api } from "@shared/api";
 import { useI18n } from "@shared/i18n";
 import { bytes, date, money, num, speed } from "@shared/format";
@@ -70,6 +70,7 @@ export function Plans() {
   const me = useMe().data;
   const [buying, setBuying] = useState<PublicPlan | null>(null);
   const [params, setParams] = useSearchParams();
+  const [payFailed, setPayFailed] = useState(false);
   const toast = useToast();
   const refresh = useRefresh();
   // Back from the payment gateway.
@@ -77,7 +78,7 @@ export function Plans() {
     const r = params.get("pay");
     if (!r) return;
     if (r === "ok") toast.success(t("pay.online.ok"));
-    else toast.error({ code: r === "error" ? "hub_unreachable" : "pay_failed" });
+    else setPayFailed(true);
     refresh();
     setParams({}, { replace: true });
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -91,6 +92,17 @@ export function Plans() {
         <h1 className="text-2xl font-extrabold">{t("plans.title")}</h1>
         <p className="text-muted mt-1">{t("plans.sub")}</p>
       </div>
+
+      {payFailed && (
+        <Card className="p-4 sm:p-5 flex flex-col sm:flex-row sm:items-center gap-4 border-danger/30">
+          <div className="size-11 rounded-2xl bg-danger-soft text-danger grid place-items-center shrink-0"><CreditCard className="size-5" /></div>
+          <div className="flex-1">
+            <div className="font-bold">{t("pay.fail.t")}</div>
+            <div className="text-sm text-muted mt-0.5">{t("err.pay_failed")}</div>
+          </div>
+          <Link to="/support"><Button variant="secondary" className="w-full sm:w-auto" icon={<Headset className="size-4" />}>{t("sup.contact")}</Button></Link>
+        </Card>
+      )}
 
       {info.plans.length === 0 ? (
         <Card><Empty icon={<CreditCard className="size-6" />} title={t("plans.none")} /></Card>

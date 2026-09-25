@@ -275,7 +275,13 @@ func SchemaVersion() int { return len(migrations) }
 // Setting keys. Values are strings; typed accessors live on the callers.
 const (
 	SetBrand            = "brand"
-	SetSupport          = "support"           // how customers reach the operator
+	SetSupport          = "support"           // free text about support, shown under the contact methods
+	SetSupportTelegram  = "support_telegram"  // Telegram username
+	SetSupportWhatsApp  = "support_whatsapp"  // WhatsApp number
+	SetSupportBale      = "support_bale"      // Bale username
+	SetSupportPhone     = "support_phone"     // phone number
+	SetSupportEmail     = "support_email"     // email address
+	SetSupportHours     = "support_hours"     // when support answers
 	SetPaymentInfo      = "payment_info"      // card number, account holder, etc.
 	SetSignupOpen       = "signup_open"       // "1" or "0"
 	SetSignupPlan       = "signup_plan"       // plan id a new account starts on, "0" for none

@@ -885,7 +885,9 @@ func (s *Hub) aDeleteGate(w http.ResponseWriter, r *http.Request, a *store.Admin
 
 var editableSettings = []string{store.SetBrand, store.SetSupport, store.SetPaymentInfo, store.SetSignupOpen,
 	store.SetSignupPlan, store.SetNotice, store.SetCurrency, store.SetDNSAddress, store.SetIDPaySandbox, store.SetPriceUnit,
-	store.SetCardPay, store.SetZarinpalSandbox, "pay_idpay_on", "pay_zarinpal_on", "pay_payping_on"}
+	store.SetCardPay, store.SetZarinpalSandbox, "pay_idpay_on", "pay_zarinpal_on", "pay_payping_on",
+	store.SetSupportTelegram, store.SetSupportWhatsApp, store.SetSupportBale, store.SetSupportPhone,
+	store.SetSupportEmail, store.SetSupportHours}
 
 // secretSettings are write-only: the console can set or clear them, and learns
 // only whether one is set.
@@ -958,6 +960,15 @@ func (s *Hub) aUpdateSettings(w http.ResponseWriter, r *http.Request, a *store.A
 		case store.SetDNSAddress:
 			if v != "" && net.ParseIP(v) == nil {
 				return fail(400, "ip_invalid", "the DNS address must be an IP address")
+			}
+		case store.SetSupportTelegram, store.SetSupportBale:
+			v = handle(v)
+		case store.SetSupportWhatsApp, store.SetSupportPhone:
+			v = cleanPhone(v)
+		case store.SetSupportEmail:
+			v = trimmed(v, 120)
+			if v != "" && (!strings.Contains(v, "@") || strings.ContainsAny(v, " <>\"")) {
+				return fail(400, "email_invalid", "that is not an email address")
 			}
 		default:
 			v = trimmed(v, 2000)
@@ -1069,4 +1080,20 @@ func (s *Hub) aRestore(w http.ResponseWriter, r *http.Request, a *store.Admin) e
 		close(s.restart)
 	}()
 	return nil
+}
+
+// handle turns "@name", "t.me/name" or a full link into just "name".
+func handle(v string) string {
+	v = strings.TrimSpace(v)
+	for _, p := range []string{"https://", "http://", "t.me/", "telegram.me/", "ble.ir/", "@"} {
+		v = strings.TrimPrefix(v, p)
+	}
+	v = strings.Trim(v, "/ ")
+	var b strings.Builder
+	for _, r := range v {
+		if r >= 'a' && r <= 'z' || r >= 'A' && r <= 'Z' || r >= '0' && r <= '9' || r == '_' {
+			b.WriteRune(r)
+		}
+	}
+	return trimmed(b.String(), 64)
 }

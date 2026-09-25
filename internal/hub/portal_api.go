@@ -149,8 +149,13 @@ func (s *Hub) pInfo(w http.ResponseWriter, r *http.Request) error {
 		}
 	}
 	return ok(w, map[string]any{
-		"brand":        set[store.SetBrand],
-		"support":      set[store.SetSupport],
+		"brand":   set[store.SetBrand],
+		"support": set[store.SetSupport],
+		"contact": map[string]string{
+			"telegram": set[store.SetSupportTelegram], "whatsapp": set[store.SetSupportWhatsApp],
+			"bale": set[store.SetSupportBale], "phone": set[store.SetSupportPhone],
+			"email": set[store.SetSupportEmail], "hours": set[store.SetSupportHours],
+		},
 		"notice":       set[store.SetNotice],
 		"currency":     set[store.SetCurrency],
 		"payment_info": set[store.SetPaymentInfo],

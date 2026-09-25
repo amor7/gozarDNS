@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { renderSVG } from "uqr";
-import { CreditCard, DatabaseBackup, Download, Info, KeyRound, Plus, ShieldCheck, SlidersHorizontal, Trash2, Upload, Users as UsersIcon } from "lucide-react";
+import { CreditCard, DatabaseBackup, Download, Headset, Info, KeyRound, Plus, ShieldCheck, SlidersHorizontal, Trash2, Upload, Users as UsersIcon } from "lucide-react";
 import { api } from "@shared/api";
 import { useI18n } from "@shared/i18n";
 import { date, latinDigits, relative } from "@shared/format";
@@ -17,42 +17,52 @@ type SettingsResp = {
   system: { version: string; public_ip: string; admin_url: string; admin_domain: string; cert_until: number; ipv6_egress: boolean; control_port: number; fingerprint: string };
 };
 
-export function Settings() {
-  const { t } = useI18n();
-  const q = useQuery({ queryKey: ["settings"], queryFn: () => api<SettingsResp>("/settings") });
-  if (!q.data) return <PageLoader />;
-  return (
-    <div className="space-y-5">
-      <PageHeader title={t("set.title")} />
-      <div className="grid xl:grid-cols-2 gap-5 items-start">
-        <div className="space-y-5">
-          <General s={q.data.settings} />
-          <OnlinePay s={q.data.settings} />
-          <Backup />
-        </div>
-        <div className="space-y-5">
-          <Security />
-          <Admins />
-          <System sys={q.data.system} />
-        </div>
-      </div>
-    </div>
-  );
-}
+/** One draft for every editable setting on the page. Only changed keys live
+ *  here, so a refetch of the settings can never overwrite what is being
+ *  typed; the save bar sends exactly these. */
+type Form = {
+  v: (k: string) => string;
+  set: (k: string, val: string) => void;
+  secret: (k: string) => string;
+  setSecret: (k: string, val: string) => void;
+};
 
-function General({ s }: { s: Record<string, string> }) {
+export function Settings() {
   const { t } = useI18n();
   const qc = useQueryClient();
   const toast = useToast();
-  const plans = useQuery({ queryKey: ["plans"], queryFn: () => api<Plan[]>("/plans") });
-  const [f, setF] = useState(s);
+  const q = useQuery({ queryKey: ["settings"], queryFn: () => api<SettingsResp>("/settings") });
+  const [draft, setDraft] = useState<Record<string, string>>({});
+  const [secrets, setSecrets] = useState<Record<string, string>>({});
   const [busy, setBusy] = useState(false);
-  useEffect(() => setF(s), [s]);
-  const set = (k: string) => (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => setF({ ...f, [k]: e.target.value });
+  const dirty = Object.keys(draft).length > 0 || Object.values(secrets).some((x) => x.trim());
+
+  // Leaving with unsaved changes asks first.
+  useEffect(() => {
+    if (!dirty) return;
+    const on = (e: BeforeUnloadEvent) => e.preventDefault();
+    window.addEventListener("beforeunload", on);
+    return () => window.removeEventListener("beforeunload", on);
+  }, [dirty]);
+
+  if (!q.data) return <PageLoader />;
+  const s = q.data.settings;
+  const form: Form = {
+    v: (k) => (k in draft ? draft[k] : s[k] || ""),
+    set: (k, val) => setDraft((d) => ({ ...d, [k]: val })),
+    secret: (k) => secrets[k] || "",
+    setSecret: (k, val) => setSecrets((x) => ({ ...x, [k]: val })),
+  };
+
   const save = async () => {
     setBusy(true);
     try {
-      await api("/settings", { method: "PATCH", body: { ...f, dns_address: latinDigits(f.dns_address || "") } });
+      const body: Record<string, string> = { ...draft };
+      if ("dns_address" in body) body.dns_address = latinDigits(body.dns_address);
+      for (const [k, val] of Object.entries(secrets)) if (val.trim()) body[k] = val.trim();
+      await api("/settings", { method: "PATCH", body });
+      setDraft({});
+      setSecrets({});
       toast.success(t("ui.saved"));
       qc.invalidateQueries({ queryKey: ["settings"] });
       qc.invalidateQueries({ queryKey: ["me"] });
@@ -62,29 +72,162 @@ function General({ s }: { s: Record<string, string> }) {
       setBusy(false);
     }
   };
+
+  return (
+    <div className={cn("space-y-5", dirty && "pb-24")}>
+      <PageHeader title={t("set.title")} />
+      <div className="grid xl:grid-cols-2 gap-5 items-start">
+        <div className="space-y-5">
+          <General form={form} />
+          <Support form={form} />
+          <OnlinePay s={s} form={form} />
+          <Backup />
+        </div>
+        <div className="space-y-5">
+          <Security />
+          <Admins />
+          <System sys={q.data.system} />
+        </div>
+      </div>
+      {dirty && (
+        <div className="fixed z-40 bottom-4 inset-x-4 lg:start-[288px] lg:end-8 animate-up">
+          <div className="max-w-3xl mx-auto glass rounded-2xl shadow-pop px-4 py-3 flex items-center gap-3">
+            <span className="size-2.5 rounded-full bg-warning shrink-0" />
+            <span className="flex-1 text-sm font-semibold">{t("set.unsaved")}</span>
+            <Button variant="ghost" size="sm" onClick={() => { setDraft({}); setSecrets({}); }}>{t("ui.cancel")}</Button>
+            <Button size="sm" onClick={save} loading={busy}>{t("set.save")}</Button>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
+function General({ form }: { form: Form }) {
+  const { t } = useI18n();
+  const plans = useQuery({ queryKey: ["plans"], queryFn: () => api<Plan[]>("/plans") });
+  const bind = (k: string) => ({ value: form.v(k), onChange: (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => form.set(k, e.target.value) });
   return (
     <Card>
       <CardHeader title={t("set.general")} icon={<SlidersHorizontal className="size-[18px]" />} />
       <div className="px-5 pb-5 space-y-4">
         <div className="grid sm:grid-cols-3 gap-3">
-          <Field label={t("set.brand")} hint={t("set.brand.hint")} className="sm:col-span-2"><Input value={f.brand || ""} onChange={set("brand")} /></Field>
-          <Field label={t("set.currency")}><Input value={f.currency || ""} onChange={set("currency")} /></Field>
+          <Field label={t("set.brand")} hint={t("set.brand.hint")} className="sm:col-span-2"><Input {...bind("brand")} /></Field>
+          <Field label={t("set.currency")}><Input {...bind("currency")} /></Field>
         </div>
-        <Field label={t("set.support")}><Textarea value={f.support || ""} onChange={set("support")} rows={2} placeholder={t("set.support.ph")} /></Field>
-        <Field label={t("set.notice")} hint={t("set.notice.hint")}><Textarea value={f.notice || ""} onChange={set("notice")} rows={2} /></Field>
-        <Field label={t("set.payment")} hint={t("set.payment.hint")}><Textarea value={f.payment_info || ""} onChange={set("payment_info")} rows={3} /></Field>
+        <Field label={t("set.notice")} hint={t("set.notice.hint")}><Textarea {...bind("notice")} rows={2} /></Field>
+        <Field label={t("set.payment")} hint={t("set.payment.hint")}><Textarea {...bind("payment_info")} rows={3} /></Field>
         <div className="rounded-2xl border border-line p-4 space-y-3">
           <div className="font-bold text-sm">{t("set.signup")}</div>
-          <Switch checked={f.signup_open === "1"} onChange={(v) => setF({ ...f, signup_open: v ? "1" : "0" })} label={t("set.signup.open")} />
+          <Switch checked={form.v("signup_open") === "1"} onChange={(x) => form.set("signup_open", x ? "1" : "0")} label={t("set.signup.open")} />
           <Field label={t("set.signup.plan")}>
-            <Select value={f.signup_plan || "0"} onChange={set("signup_plan")}>
+            <Select value={form.v("signup_plan") || "0"} onChange={(e) => form.set("signup_plan", e.target.value)}>
               <option value="0">{t("set.signup.plan.none")}</option>
               {plans.data?.map((p) => <option key={p.id} value={p.id}>{p.name}</option>)}
             </Select>
           </Field>
         </div>
-        <Field label={t("set.dns")} hint={t("set.dns.hint")}><Input value={f.dns_address || ""} onChange={set("dns_address")} ltr placeholder="—" /></Field>
-        <Button onClick={save} loading={busy}>{t("ui.save")}</Button>
+        <Field label={t("set.dns")} hint={t("set.dns.hint")}><Input {...bind("dns_address")} ltr placeholder="—" /></Field>
+      </div>
+    </Card>
+  );
+}
+
+const contactFields: { key: string; ltr?: boolean; ph: string; mode?: "tel" | "email" }[] = [
+  { key: "support_telegram", ltr: true, ph: "@gozar_support" },
+  { key: "support_whatsapp", ltr: true, ph: "0912 345 6789", mode: "tel" },
+  { key: "support_bale", ltr: true, ph: "@gozar_support" },
+  { key: "support_phone", ltr: true, ph: "021 1234 5678", mode: "tel" },
+  { key: "support_email", ltr: true, ph: "support@example.com", mode: "email" },
+  { key: "support_hours", ph: "" },
+];
+
+function Support({ form }: { form: Form }) {
+  const { t } = useI18n();
+  return (
+    <Card>
+      <CardHeader title={t("set.contact")} sub={t("set.contact.sub")} icon={<Headset className="size-[18px]" />} />
+      <div className="px-5 pb-5 space-y-4">
+        <div className="grid sm:grid-cols-2 gap-3">
+          {contactFields.map((c) => (
+            <Field key={c.key} label={t("set." + c.key)}>
+              <Input value={form.v(c.key)} onChange={(e) => form.set(c.key, e.target.value)} ltr={c.ltr} inputMode={c.mode} placeholder={c.ph || t("set.support_hours.ph")} />
+            </Field>
+          ))}
+        </div>
+        <Field label={t("set.support")} hint={t("set.support.hint")}>
+          <Textarea value={form.v("support")} onChange={(e) => form.set("support", e.target.value)} rows={2} />
+        </Field>
+      </div>
+    </Card>
+  );
+}
+
+const gatewayFields: { id: string; secret: string; sandbox?: string }[] = [
+  { id: "zarinpal", secret: "zarinpal_merchant", sandbox: "zarinpal_sandbox" },
+  { id: "idpay", secret: "idpay_key", sandbox: "idpay_sandbox" },
+  { id: "payping", secret: "payping_token" },
+];
+
+function OnlinePay({ s, form }: { s: Record<string, string>; form: Form }) {
+  const { t, lang } = useI18n();
+  const qc = useQueryClient();
+  const toast = useToast();
+  const confirm = useConfirm();
+  const on = (k: string) => form.v(k) === "1";
+  const toggle = (k: string) => (x: boolean) => form.set(k, x ? "1" : "0");
+
+  // Removing a key happens at once: there is nothing to type, and it should
+  // not wait on unrelated edits.
+  const removeKey = async (secret: string, name: string) => {
+    if (!(await confirm({ title: t("set.pay.remove.q", { name }), danger: true }))) return;
+    try {
+      await api("/settings", { method: "PATCH", body: { [secret]: "" } });
+      toast.success(t("ui.saved"));
+      qc.invalidateQueries({ queryKey: ["settings"] });
+    } catch (e) {
+      toast.error(e);
+    }
+  };
+
+  return (
+    <Card>
+      <CardHeader title={t("set.pay")} sub={t("set.pay.sub")} icon={<CreditCard className="size-[18px]" />} />
+      <div className="px-5 pb-5 space-y-3">
+        <div className="rounded-2xl border border-line p-4">
+          <Switch checked={on("pay_card")} onChange={toggle("pay_card")} label={<b>{gatewayNames.receipt[lang]}</b>} />
+          <div className="text-xs text-muted mt-2 ms-14">{t("set.pay.card.s")}</div>
+        </div>
+        {gatewayFields.map((g) => {
+          const isSet = s[g.secret + "_set"] === "1";
+          const enabled = on("pay_" + g.id + "_on");
+          return (
+            <div key={g.id} className={cn("rounded-2xl border p-4 space-y-3 transition-colors", isSet && enabled ? "border-primary/40 bg-primary-soft" : "border-line")}>
+              <div className="flex items-center justify-between gap-3">
+                <Switch checked={enabled} onChange={toggle("pay_" + g.id + "_on")} label={<b>{gatewayNames[g.id][lang]}</b>} />
+                <Badge tone={isSet && enabled ? "success" : "neutral"} dot>
+                  {!isSet ? t("set.pay.nokey") : enabled ? t("set.idpay.on") : t("set.idpay.off")}
+                </Badge>
+              </div>
+              <Field label={t("set.pay.key." + g.id)} hint={isSet ? t("set.idpay.key.set") : undefined}>
+                <PasswordInput value={form.secret(g.secret)} onChange={(e) => form.setSecret(g.secret, e.target.value)} placeholder={isSet ? "••••••••••••" : ""} autoComplete="off" />
+              </Field>
+              <div className="flex flex-wrap items-center justify-between gap-2">
+                {g.sandbox ? <Switch checked={on(g.sandbox)} onChange={toggle(g.sandbox)} label={t("set.idpay.sandbox")} /> : <span />}
+                {isSet && (
+                  <button className="text-xs text-danger font-semibold" onClick={() => removeKey(g.secret, gatewayNames[g.id][lang])}>{t("set.idpay.remove")}</button>
+                )}
+              </div>
+            </div>
+          );
+        })}
+        <Field label={t("set.idpay.unit")} hint={t("set.idpay.unit.hint")}>
+          <Select value={form.v("price_unit") || "toman"} onChange={(e) => form.set("price_unit", e.target.value)}>
+            <option value="toman">{t("set.idpay.toman")}</option>
+            <option value="rial">{t("set.idpay.rial")}</option>
+          </Select>
+        </Field>
+        <div className="text-xs text-muted leading-relaxed">{t("set.pay.callback")}</div>
       </div>
     </Card>
   );
@@ -289,87 +432,6 @@ function System({ sys }: { sys: SettingsResp["system"] }) {
         <KV k={t("set.system.url")} v={<span className="ltr text-xs">{sys.admin_url}</span>} />
         <KV k={t("set.system.cert")} v={cert} />
         <KV k={t("set.system.ipv6")} v={<Badge tone={sys.ipv6_egress ? "success" : "neutral"}>{sys.ipv6_egress ? t("set.system.on") : t("set.system.off")}</Badge>} />
-      </div>
-    </Card>
-  );
-}
-
-const gatewayFields: { id: string; secret: string; sandbox?: string }[] = [
-  { id: "zarinpal", secret: "zarinpal_merchant", sandbox: "zarinpal_sandbox" },
-  { id: "idpay", secret: "idpay_key", sandbox: "idpay_sandbox" },
-  { id: "payping", secret: "payping_token" },
-];
-
-function OnlinePay({ s }: { s: Record<string, string> }) {
-  const { t, lang } = useI18n();
-  const qc = useQueryClient();
-  const toast = useToast();
-  const confirm = useConfirm();
-  const [f, setF] = useState<Record<string, string>>({});
-  const [secrets, setSecrets] = useState<Record<string, string>>({});
-  const [busy, setBusy] = useState(false);
-  const v = (k: string) => (k in f ? f[k] : s[k] || "");
-  const on = (k: string) => v(k) === "1";
-  const toggle = (k: string) => (x: boolean) => setF({ ...f, [k]: x ? "1" : "0" });
-
-  const save = async (extra: Record<string, string> = {}) => {
-    setBusy(true);
-    try {
-      const body: Record<string, string> = { ...f, ...extra };
-      for (const [k, val] of Object.entries(secrets)) if (val.trim()) body[k] = val.trim();
-      await api("/settings", { method: "PATCH", body });
-      setF({});
-      setSecrets({});
-      toast.success(t("ui.saved"));
-      qc.invalidateQueries({ queryKey: ["settings"] });
-    } catch (e) {
-      toast.error(e);
-    } finally {
-      setBusy(false);
-    }
-  };
-
-  return (
-    <Card>
-      <CardHeader title={t("set.pay")} sub={t("set.pay.sub")} icon={<CreditCard className="size-[18px]" />} />
-      <div className="px-5 pb-5 space-y-3">
-        <div className="rounded-2xl border border-line p-4">
-          <Switch checked={on("pay_card")} onChange={toggle("pay_card")} label={<b>{gatewayNames.receipt[lang]}</b>} />
-          <div className="text-xs text-muted mt-2 ms-14">{t("set.pay.card.s")}</div>
-        </div>
-        {gatewayFields.map((g) => {
-          const isSet = s[g.secret + "_set"] === "1";
-          const enabled = on("pay_" + g.id + "_on");
-          return (
-            <div key={g.id} className={cn("rounded-2xl border p-4 space-y-3 transition-colors", isSet && enabled ? "border-primary/40 bg-primary-soft" : "border-line")}>
-              <div className="flex items-center justify-between gap-3">
-                <Switch checked={enabled} onChange={toggle("pay_" + g.id + "_on")} label={<b>{gatewayNames[g.id][lang]}</b>} />
-                <Badge tone={isSet && enabled ? "success" : "neutral"} dot>
-                  {!isSet ? t("set.pay.nokey") : enabled ? t("set.idpay.on") : t("set.idpay.off")}
-                </Badge>
-              </div>
-              <Field label={t("set.pay.key." + g.id)} hint={isSet ? t("set.idpay.key.set") : undefined}>
-                <PasswordInput value={secrets[g.secret] || ""} onChange={(e) => setSecrets({ ...secrets, [g.secret]: e.target.value })} placeholder={isSet ? "••••••••••••" : ""} autoComplete="off" />
-              </Field>
-              <div className="flex flex-wrap items-center justify-between gap-2">
-                {g.sandbox ? <Switch checked={on(g.sandbox)} onChange={toggle(g.sandbox)} label={t("set.idpay.sandbox")} /> : <span />}
-                {isSet && (
-                  <button className="text-xs text-danger font-semibold" onClick={async () => {
-                    if (await confirm({ title: t("set.pay.remove.q", { name: gatewayNames[g.id][lang] }), danger: true })) save({ [g.secret]: "" });
-                  }}>{t("set.idpay.remove")}</button>
-                )}
-              </div>
-            </div>
-          );
-        })}
-        <Field label={t("set.idpay.unit")} hint={t("set.idpay.unit.hint")}>
-          <Select value={v("price_unit") || "toman"} onChange={(e) => setF({ ...f, price_unit: e.target.value })}>
-            <option value="toman">{t("set.idpay.toman")}</option>
-            <option value="rial">{t("set.idpay.rial")}</option>
-          </Select>
-        </Field>
-        <div className="text-xs text-muted leading-relaxed">{t("set.pay.callback")}</div>
-        <Button onClick={() => save()} loading={busy}>{t("ui.save")}</Button>
       </div>
     </Card>
   );

@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { Link } from "react-router";
-import { CalendarClock, CircleAlert, CircleCheck, Gauge, Laptop, MonitorSmartphone, Pencil, Plus, Radar, RefreshCw, ShieldAlert, Trash2, TriangleAlert, Wifi, Zap } from "lucide-react";
+import { CalendarClock, CircleAlert, CircleCheck, Gauge, Headset, Laptop, MonitorSmartphone, Pencil, Plus, Radar, RefreshCw, ShieldAlert, Trash2, TriangleAlert, Wifi, Zap } from "lucide-react";
 import { api } from "@shared/api";
 import { useI18n } from "@shared/i18n";
 import { bytes, bytesParts, date, daysLeft, num, relative, shortDate, speed } from "@shared/format";
@@ -75,11 +75,18 @@ function Alerts({ me }: { me: Me }) {
         <div className="font-bold">{a.title}</div>
         <div className="text-sm text-muted mt-0.5">{a.sub}</div>
       </div>
-      {u.state !== "disabled" && (
-        <Link to="/plans">
-          <Button className="w-full sm:w-auto">{a.cta}</Button>
-        </Link>
-      )}
+      <div className="flex gap-2 w-full sm:w-auto">
+        {u.state !== "disabled" && (
+          <Link to="/plans" className="flex-1">
+            <Button className="w-full">{a.cta}</Button>
+          </Link>
+        )}
+        {a.tone !== "warning" && (
+          <Link to="/support" className="flex-1">
+            <Button variant="secondary" className="w-full" icon={<Headset className="size-4" />}>{t("sup.contact")}</Button>
+          </Link>
+        )}
+      </div>
     </Card>
   );
 }

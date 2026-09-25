@@ -1,20 +1,19 @@
 import { useState, type FormEvent } from "react";
 import { useQueryClient } from "@tanstack/react-query";
 import { useNavigate } from "react-router";
-import { Headset, KeyRound, LogOut, Palette } from "lucide-react";
+import { KeyRound, LogOut, Palette } from "lucide-react";
 import { api } from "@shared/api";
 import { useI18n } from "@shared/i18n";
 import { useTheme, type ThemePref } from "@shared/theme";
 import { date } from "@shared/format";
-import { Avatar, Button, Card, CardHeader, Field, Lines, PasswordInput, Segmented } from "@shared/ui";
+import { Avatar, Button, Card, CardHeader, Field, PasswordInput, Segmented } from "@shared/ui";
 import { useToast } from "@shared/overlay";
-import { useInfo, useMe } from "../data";
+import { useMe } from "../data";
 
 export function Account() {
   const { t, lang, setLang } = useI18n();
   const { pref, setPref } = useTheme();
   const me = useMe().data;
-  const info = useInfo().data;
   const qc = useQueryClient();
   const nav = useNavigate();
   const toast = useToast();
@@ -89,15 +88,6 @@ export function Account() {
         </form>
       </Card>
 
-      {info?.support && (
-        <Card className="p-5 flex items-start gap-3">
-          <div className="size-9 rounded-xl bg-primary-soft text-primary grid place-items-center shrink-0"><Headset className="size-[18px]" /></div>
-          <div>
-            <div className="font-bold text-[15px]">{t("acc.support")}</div>
-            <Lines text={info.support} className="text-sm text-muted mt-1 leading-relaxed" />
-          </div>
-        </Card>
-      )}
 
       <Button variant="secondary" block size="lg" icon={<LogOut className="size-4" />} onClick={logout} className="text-danger">
         {t("acc.logout")}
