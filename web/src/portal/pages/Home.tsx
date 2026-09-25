@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { Link } from "react-router";
-import { CalendarClock, CircleAlert, CircleCheck, Gauge, Laptop, MonitorSmartphone, Pencil, Plus, Radar, ShieldAlert, Trash2, TriangleAlert, Wifi, Zap } from "lucide-react";
+import { CalendarClock, CircleAlert, CircleCheck, Gauge, Laptop, MonitorSmartphone, Pencil, Plus, Radar, RefreshCw, ShieldAlert, Trash2, TriangleAlert, Wifi, Zap } from "lucide-react";
 import { api } from "@shared/api";
 import { useI18n } from "@shared/i18n";
 import { bytes, bytesParts, date, daysLeft, num, relative, shortDate, speed } from "@shared/format";
@@ -8,6 +8,7 @@ import { Badge, Button, Card, CardHeader, CopyButton, cn, Field, Input, Lines, P
 import { BarChart } from "@shared/charts";
 import { Modal, useConfirm, useToast } from "@shared/overlay";
 import { useInfo, useMe, useRefresh } from "../data";
+import { ProbeResult, useProbe } from "../probe";
 import type { Me } from "../types";
 
 const stateTone = { active: "success", no_plan: "neutral", expired: "danger", over_quota: "danger", disabled: "danger" } as const;
@@ -148,6 +149,7 @@ function MiniStat({ icon, label, value, sub, progress }: { icon: React.ReactNode
 
 function ConnectionCard({ me }: { me: Me }) {
   const { t } = useI18n();
+  const meQuery = useMe();
   const toast = useToast();
   const refresh = useRefresh();
   const [open, setOpen] = useState(false);
@@ -172,35 +174,66 @@ function ConnectionCard({ me }: { me: Me }) {
     }
   };
 
-  let body: React.ReactNode;
+  const probe = useProbe();
+  const recheck = async () => {
+    const before = me.current_ip;
+    const r = await meQuery.refetch();
+    if (r.data && r.data.current_ip !== before) toast.info(t("conn.changed", { ip: r.data.current_ip }));
+  };
+
+  let tone: "success" | "warning" | "danger" = "warning";
+  let icon = <Wifi className="size-5" />;
+  let title = t("conn.new");
+  let sub: string | null = t("conn.new.sub");
   if (me.ipv6) {
-    body = <Status tone="warning" icon={<CircleAlert className="size-5" />} title={t("conn.v6")} sub={t("conn.v6.sub")} />;
+    [icon, title, sub] = [<CircleAlert className="size-5" />, t("conn.v6"), t("conn.v6.sub")];
   } else if (me.this_device) {
-    body = (
-      <>
-        <Status tone="success" icon={<CircleCheck className="size-5" />} title={t("conn.ok")} sub={t("conn.ok.sub")} ip={me.current_ip} />
-        <Link to="/setup" className="block mt-4">
-          <Button variant="secondary" block icon={<Radar className="size-4" />}>{t("conn.test")}</Button>
-        </Link>
-      </>
-    );
+    [tone, icon, title, sub] = ["success", <CircleCheck className="size-5" />, t("conn.ok"), null];
   } else if (me.ip_taken) {
-    body = <Status tone="danger" icon={<ShieldAlert className="size-5" />} title={t("conn.taken")} sub={t("conn.taken.sub")} ip={me.current_ip} />;
-  } else {
-    body = (
-      <>
-        <Status tone="warning" icon={<Wifi className="size-5" />} title={t("conn.new")} sub={t("conn.new.sub")} ip={me.current_ip} />
-        <Button block className="mt-4" icon={<Plus className="size-4" />} onClick={() => setOpen(true)} disabled={me.user.state === "disabled"}>
-          {t("conn.register")}
-        </Button>
-      </>
-    );
+    [tone, icon, title, sub] = ["danger", <ShieldAlert className="size-5" />, t("conn.taken"), t("conn.taken.sub")];
   }
+  const tones = { success: "bg-success-soft text-success", warning: "bg-warning-soft text-warning", danger: "bg-danger-soft text-danger" };
 
   return (
     <Card className="p-5">
-      <div className="text-xs font-semibold text-muted mb-3">{t("conn.title")}</div>
-      {body}
+      <div className="flex items-center justify-between mb-3">
+        <span className="text-xs font-semibold text-muted">{t("conn.title")}</span>
+        <button onClick={recheck} disabled={meQuery.isFetching} title={t("conn.refresh")} aria-label={t("conn.refresh")}
+          className="h-8 px-2.5 -me-2 rounded-lg text-xs font-semibold text-muted hover:text-fg hover:bg-surface-2 inline-flex items-center gap-1.5 disabled:opacity-60">
+          <RefreshCw className={cn("size-3.5", meQuery.isFetching && "animate-spin")} />
+          {t("conn.refresh.short")}
+        </button>
+      </div>
+
+      <div className="flex gap-3 items-start">
+        <div className={cn("size-10 rounded-xl grid place-items-center shrink-0", tones[tone])}>{icon}</div>
+        <div className="min-w-0 pt-0.5">
+          <div className="font-bold text-[15px] leading-snug">{title}</div>
+          {sub && <div className="text-[13px] text-muted mt-1 leading-relaxed">{sub}</div>}
+        </div>
+      </div>
+
+      {!me.ipv6 && (
+        <div className="mt-4 flex items-center justify-between gap-3 rounded-xl bg-surface-2 px-3.5 h-11">
+          <span className="text-[13px] text-muted">{t("conn.ip")}</span>
+          <span className="ltr num font-bold tracking-wide">{me.current_ip}</span>
+        </div>
+      )}
+
+      {me.this_device ? (
+        <div className="mt-3 space-y-3">
+          <Button variant="secondary" block icon={<Radar className={cn("size-4", probe.state === "running" && "animate-spin [animation-duration:2s]")} />}
+            loading={probe.state === "running"} onClick={probe.run}>
+            {probe.state === "running" ? t("setup.test.running") : t("conn.test")}
+          </Button>
+          {probe.state === "done" && <ProbeResult res={probe.res} />}
+        </div>
+      ) : !me.ip_taken && !me.ipv6 ? (
+        <Button block className="mt-3" icon={<Plus className="size-4" />} onClick={() => setOpen(true)} disabled={me.user.state === "disabled"}>
+          {t("conn.register")}
+        </Button>
+      ) : null}
+
       <Modal
         open={open}
         onClose={() => setOpen(false)}
@@ -237,20 +270,6 @@ function ConnectionCard({ me }: { me: Me }) {
         </div>
       </Modal>
     </Card>
-  );
-}
-
-function Status({ tone, icon, title, sub, ip }: { tone: "success" | "warning" | "danger"; icon: React.ReactNode; title: string; sub: string; ip?: string }) {
-  const tones = { success: "bg-success-soft text-success", warning: "bg-warning-soft text-warning", danger: "bg-danger-soft text-danger" };
-  return (
-    <div className="flex gap-3">
-      <div className={cn("size-10 rounded-xl grid place-items-center shrink-0", tones[tone])}>{icon}</div>
-      <div className="min-w-0">
-        <div className="font-bold text-[15px] leading-snug">{title}</div>
-        <div className="text-[13px] text-muted mt-1 leading-relaxed">{sub}</div>
-        {ip && <div className="mt-2"><span className="ltr num inline-block text-sm font-bold text-fg bg-surface-2 border border-line px-2.5 py-1 rounded-lg">{ip}</span></div>}
-      </div>
-    </div>
   );
 }
 

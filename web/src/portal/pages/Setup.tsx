@@ -1,12 +1,9 @@
 import { useState } from "react";
-import { CircleCheck, CircleX, Gamepad2, Lightbulb, Monitor, Radar, Router, Smartphone, TriangleAlert } from "lucide-react";
-import { api } from "@shared/api";
+import { Gamepad2, Lightbulb, Monitor, Router, Smartphone, TriangleAlert } from "lucide-react";
 import { useI18n } from "@shared/i18n";
-import { Button, Card, CopyButton, cn } from "@shared/ui";
+import { Card, CopyButton, cn } from "@shared/ui";
 import { useMe } from "../data";
 import { guides, guideText } from "../guides";
-
-type Result = { seen: boolean; same_ip: boolean; from: string; you: string };
 
 const icons = { console: Gamepad2, phone: Smartphone, desktop: Monitor, router: Router };
 
@@ -31,8 +28,6 @@ export function Setup() {
         </div>
         <CopyButton text={dns} size="md" className="w-full sm:w-auto" />
       </Card>
-
-      <ProbeCard />
 
       <Card className="overflow-hidden">
         <div className="flex gap-2 overflow-x-auto p-3 border-b border-line [scrollbar-width:none]">
@@ -96,72 +91,5 @@ function StepText({ text, dns }: { text: string; dns: string }) {
         </span>
       ))}
     </>
-  );
-}
-
-/** Asks the browser to resolve a one-time name. Only this service's DNS
- *  answers it, so if the gate saw the lookup, the device is set up. */
-function ProbeCard() {
-  const { t } = useI18n();
-  const [state, setState] = useState<"idle" | "running" | "done">("idle");
-  const [res, setRes] = useState<Result | null>(null);
-
-  const run = async () => {
-    setState("running");
-    setRes(null);
-    const token = "t" + Array.from(crypto.getRandomValues(new Uint8Array(10)), (b) => b.toString(16).padStart(2, "0")).join("");
-    const img = new Image();
-    img.src = `https://${token}.check.gozar.internal/p.png`;
-    let out: Result | null = null;
-    for (let i = 0; i < 10; i++) {
-      await new Promise((r) => setTimeout(r, 450));
-      try {
-        out = await api<Result>(`/probe/${token}`);
-        if (out.seen) break;
-      } catch {
-        /* keep trying */
-      }
-    }
-    setRes(out);
-    setState("done");
-  };
-
-  let result: React.ReactNode = null;
-  if (state === "done" && res) {
-    if (res.seen && res.same_ip) result = <Outcome tone="success" title={t("setup.test.ok")} sub={t("setup.test.ok.s")} />;
-    else if (res.seen) result = <Outcome tone="warning" title={t("setup.test.other")} sub={t("setup.test.other.s", { from: res.from, you: res.you })} />;
-    else result = <Outcome tone="danger" title={t("setup.test.fail")} sub={t("setup.test.fail.s")} />;
-  }
-
-  return (
-    <Card className="p-5 sm:p-6">
-      <div className="flex flex-col sm:flex-row sm:items-center gap-4">
-        <div className="size-12 rounded-2xl gradient-bg text-white grid place-items-center shrink-0 shadow-[0_10px_24px_-10px_var(--primary)]">
-          <Radar className={cn("size-6", state === "running" && "animate-spin [animation-duration:2s]")} />
-        </div>
-        <div className="flex-1">
-          <div className="font-bold">{t("setup.test.t")}</div>
-          <div className="text-sm text-muted mt-0.5">{t("setup.test.s")}</div>
-        </div>
-        <Button onClick={run} loading={state === "running"} className="sm:w-auto w-full">
-          {state === "running" ? t("setup.test.running") : t("setup.test.run")}
-        </Button>
-      </div>
-      {result && <div className="mt-4">{result}</div>}
-    </Card>
-  );
-}
-
-function Outcome({ tone, title, sub }: { tone: "success" | "warning" | "danger"; title: string; sub: string }) {
-  const cls = { success: "bg-success-soft text-success", warning: "bg-warning-soft text-warning", danger: "bg-danger-soft text-danger" }[tone];
-  const Icon = tone === "success" ? CircleCheck : tone === "warning" ? TriangleAlert : CircleX;
-  return (
-    <div className={cn("rounded-2xl p-4 flex gap-3 animate-in", cls)}>
-      <Icon className="size-5 shrink-0 mt-0.5" />
-      <div>
-        <div className="font-bold">{title}</div>
-        <div className="text-sm text-fg/80 mt-1 leading-relaxed">{sub}</div>
-      </div>
-    </div>
   );
 }
