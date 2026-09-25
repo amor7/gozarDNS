@@ -1,8 +1,9 @@
+import { useState } from "react";
 import { NavLink, Navigate, Route, Routes, useLocation } from "react-router";
-import { CloudOff, Compass, CreditCard, House, Languages, Moon, RefreshCw, Sun, UserRound, type LucideIcon } from "lucide-react";
+import { CloudOff, Compass, CreditCard, House, Languages, Megaphone, Moon, RefreshCw, Sun, UserRound, X, type LucideIcon } from "lucide-react";
 import { useI18n } from "@shared/i18n";
 import { useTheme } from "@shared/theme";
-import { Button, cn, IconButton, LogoMark, PageLoader } from "@shared/ui";
+import { Button, cn, IconButton, Lines, LogoMark, PageLoader } from "@shared/ui";
 import { useInfo, useMe } from "./data";
 import { Welcome } from "./pages/Welcome";
 import { Login, Signup } from "./pages/Auth";
@@ -68,6 +69,44 @@ function Unreachable({ onRetry }: { onRetry: () => void }) {
   );
 }
 
+/** The operator's announcement, above every page. Closing it hides this
+ *  text only; a new announcement shows again. */
+function Notice() {
+  const info = useInfo().data;
+  const text = info?.notice?.trim() || "";
+  const key = "gz-notice-closed";
+  const [closed, setClosed] = useState(() => {
+    try {
+      return localStorage.getItem(key) || "";
+    } catch {
+      return "";
+    }
+  });
+  if (!text || closed === text) return null;
+  return (
+    <div className="max-w-5xl mx-auto px-4 pt-4 animate-in">
+      <div className="rounded-2xl gradient-bg text-white p-4 flex gap-3 items-start shadow-[0_12px_32px_-16px_var(--primary)]">
+        <Megaphone className="size-5 shrink-0 mt-0.5" />
+        <Lines text={text} className="text-sm leading-relaxed flex-1 font-medium" />
+        <button
+          onClick={() => {
+            setClosed(text);
+            try {
+              localStorage.setItem(key, text);
+            } catch {
+              /* no storage: closed for this visit */
+            }
+          }}
+          className="size-7 -m-1 rounded-lg grid place-items-center text-white/80 hover:text-white hover:bg-white/15 shrink-0"
+          aria-label="close"
+        >
+          <X className="size-4" />
+        </button>
+      </div>
+    </div>
+  );
+}
+
 function Shell({ brand, nav, children }: { brand?: string; nav?: boolean; children: React.ReactNode }) {
   const { t, lang, setLang } = useI18n();
   const { dark, toggle } = useTheme();
@@ -107,6 +146,7 @@ function Shell({ brand, nav, children }: { brand?: string; nav?: boolean; childr
         </div>
       </header>
 
+      <Notice />
       <main className="max-w-5xl mx-auto px-4 pt-6">{children}</main>
 
       {nav && (

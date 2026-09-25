@@ -4,10 +4,10 @@ import { CalendarClock, CircleAlert, CircleCheck, Gauge, Laptop, MonitorSmartpho
 import { api } from "@shared/api";
 import { useI18n } from "@shared/i18n";
 import { bytes, bytesParts, date, daysLeft, num, relative, shortDate, speed } from "@shared/format";
-import { Badge, Button, Card, CardHeader, CopyButton, cn, Field, Input, Lines, PageLoader, Ring, ServiceDot } from "@shared/ui";
+import { Badge, Button, Card, CardHeader, CopyButton, cn, Field, Input, PageLoader, Ring, ServiceDot } from "@shared/ui";
 import { BarChart } from "@shared/charts";
 import { Modal, useConfirm, useToast } from "@shared/overlay";
-import { useInfo, useMe, useRefresh } from "../data";
+import { useMe, useRefresh } from "../data";
 import { ProbeResult, useProbe } from "../probe";
 import type { Me } from "../types";
 
@@ -15,7 +15,6 @@ const stateTone = { active: "success", no_plan: "neutral", expired: "danger", ov
 
 export function Home() {
   const me = useMe().data;
-  const info = useInfo().data;
   const { t } = useI18n();
   if (!me) return <PageLoader />;
   const u = me.user;
@@ -30,13 +29,6 @@ export function Home() {
           {t("home.state." + u.state)}
         </Badge>
       </div>
-
-      {info?.notice && (
-        <div className="card p-4 flex gap-3 border-primary/30 bg-primary-soft">
-          <Zap className="size-5 text-primary shrink-0 mt-0.5" />
-          <Lines text={info.notice} className="text-sm leading-relaxed flex-1" />
-        </div>
-      )}
 
       <Alerts me={me} />
 
@@ -199,7 +191,7 @@ function ConnectionCard({ me }: { me: Me }) {
       <div className="flex items-center justify-between mb-3">
         <span className="text-xs font-semibold text-muted">{t("conn.title")}</span>
         <button onClick={recheck} disabled={meQuery.isFetching} title={t("conn.refresh")} aria-label={t("conn.refresh")}
-          className="h-8 px-2.5 -me-2 rounded-lg text-xs font-semibold text-muted hover:text-fg hover:bg-surface-2 inline-flex items-center gap-1.5 disabled:opacity-60">
+          className="h-8 px-3 rounded-full text-xs font-bold bg-primary-soft text-primary border border-primary/25 hover:brightness-110 active:scale-[0.97] transition inline-flex items-center gap-1.5 disabled:opacity-60">
           <RefreshCw className={cn("size-3.5", meQuery.isFetching && "animate-spin")} />
           {t("conn.refresh.short")}
         </button>

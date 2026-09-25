@@ -3,7 +3,7 @@ import { api, ApiError } from "@shared/api";
 import type { Info, Me } from "./types";
 
 export function useInfo() {
-  return useQuery({ queryKey: ["info"], queryFn: () => api<Info>("/info"), staleTime: 60_000, retry: 1 });
+  return useQuery({ queryKey: ["info"], queryFn: () => api<Info>("/info"), staleTime: 30_000, refetchInterval: 60_000, retry: 1 });
 }
 
 /** The signed-in account, or null when signed out. */
