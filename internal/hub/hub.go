@@ -130,8 +130,20 @@ func (s *Hub) Run(ctx context.Context) error {
 		TLSConfig:         ctrl.TLSConfig.Clone(),
 		ReadHeaderTimeout: 10 * time.Second,
 		IdleTimeout:       5 * time.Minute,
-		HTTP2:             &http.HTTP2Config{MaxConcurrentStreams: 4096, SendPingTimeout: 30 * time.Second, PingTimeout: 15 * time.Second},
-		ErrorLog:          log.New(discard{}, "", 0),
+		HTTP2: &http.HTTP2Config{
+			MaxConcurrentStreams: 4096,
+			// Every customer shares this one connection. The default
+			// connection-wide receive window is 1 MB, so a single customer
+			// uploading faster than their service reads would fill it and
+			// stall everybody else's uploads - new connections included.
+			// Bound each stream instead, and give the connection room for
+			// many of them at once.
+			MaxReceiveBufferPerStream:     1 << 20,
+			MaxReceiveBufferPerConnection: 1 << 30,
+			SendPingTimeout:               30 * time.Second,
+			PingTimeout:                   15 * time.Second,
+		},
+		ErrorLog: log.New(discard{}, "", 0),
 	}
 	s.ctrlL = netx.NewChanListener(ctrlL.Addr())
 	go func() { fail("control", ctrlTunnel.ServeTLS(s.ctrlL, "", "")) }()

@@ -5,6 +5,7 @@ import (
 	"context"
 	"crypto/tls"
 	"encoding/json"
+	"fmt"
 	"io"
 	"log/slog"
 	"net"
@@ -94,8 +95,23 @@ func TestEndToEnd(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
+	stuckL, _ := net.Listen("tcp", "127.0.0.1:0")
+	defer stuckL.Close()
+	var stuck []net.Conn
+	go func() {
+		for {
+			c, err := stuckL.Accept()
+			if err != nil {
+				return
+			}
+			stuck = append(stuck, c) // held open, never read
+		}
+	}()
 	h.dialHook = func(ctx context.Context, name, port string) (net.Conn, error) {
 		var d net.Dialer
+		if name == "stuck.playstation.com" {
+			return d.DialContext(ctx, "tcp", stuckL.Addr().String())
+		}
 		return d.DialContext(ctx, "tcp", svcL.Addr().String())
 	}
 	ctx, cancel := context.WithCancel(context.Background())
@@ -209,6 +225,48 @@ func TestEndToEnd(t *testing.T) {
 	}
 	if n := h.tunnelStreams.Load(); n != 3 {
 		t.Fatalf("hub saw %d tunnel streams, want 3", n)
+	}
+	// One customer uploading faster than their service accepts must not
+	// stall everybody else's streams on the shared tunnel.
+	hog, err := net.Dial("tcp", gateCfg.Gate.HTTPSListen)
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer hog.Close()
+	hello := tlsHello(t, "stuck.playstation.com")
+	hog.Write(hello)
+	go func() {
+		junk := make([]byte, 64*1024)
+		for i := 0; i < 160; i++ { // 10 MB the far end never reads
+			if _, err := hog.Write(junk); err != nil {
+				return
+			}
+		}
+	}()
+	time.Sleep(1500 * time.Millisecond)
+	done := make(chan error, 1)
+	go func() {
+		tc, err := tls.Dial("tcp", gateCfg.Gate.HTTPSListen, &tls.Config{ServerName: "store.playstation.com", InsecureSkipVerify: true})
+		if err != nil {
+			done <- err
+			return
+		}
+		tc.Write([]byte("hello"))
+		got, _ := io.ReadAll(tc)
+		tc.Close()
+		if len(got) != len(payload) {
+			done <- fmt.Errorf("received %d bytes", len(got))
+			return
+		}
+		done <- nil
+	}()
+	select {
+	case err := <-done:
+		if err != nil {
+			t.Fatalf("second customer while the first is stuck: %v", err)
+		}
+	case <-time.After(8 * time.Second):
+		t.Fatal("a stuck upload on one stream blocked every other stream in the tunnel")
 	}
 	if s := gw.Snapshot().Tunnel; s != "up" {
 		t.Fatalf("tunnel status %q", s)
@@ -404,4 +462,16 @@ func waitFor(t *testing.T, cond func() bool) {
 		time.Sleep(100 * time.Millisecond)
 	}
 	t.Fatal("condition not met in time")
+}
+
+// tlsHello returns the first bytes a TLS client sends for name.
+func tlsHello(t *testing.T, name string) []byte {
+	a, b := net.Pipe()
+	go tls.Client(a, &tls.Config{ServerName: name, InsecureSkipVerify: true}).Handshake()
+	b.SetReadDeadline(time.Now().Add(2 * time.Second))
+	buf := make([]byte, 16*1024)
+	n, _ := b.Read(buf)
+	a.Close()
+	b.Close()
+	return buf[:n]
 }
