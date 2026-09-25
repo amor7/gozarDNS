@@ -23,6 +23,7 @@ import (
 	"github.com/amor7/gozarDNS/internal/certs"
 	"github.com/amor7/gozarDNS/internal/config"
 	"github.com/amor7/gozarDNS/internal/netx"
+	"github.com/amor7/gozarDNS/internal/proto"
 	"github.com/amor7/gozarDNS/internal/resolver"
 	"github.com/amor7/gozarDNS/internal/store"
 	"github.com/amor7/gozarDNS/internal/sysmetrics"
@@ -163,6 +164,16 @@ func (s *Hub) Run(ctx context.Context) error {
 	s.adminL = netx.NewChanListener(httpsL.Addr())
 	go func() { fail("admin", adminSrv2.ServeTLS(s.adminL, "", "")) }()
 	go s.acceptLoop(httpsL, s.handleTLS)
+	for _, p := range proto.ExtraTLSPorts {
+		l, err := net.Listen("tcp", ":"+strconv.Itoa(p))
+		if err != nil {
+			// Something else has it; only the services that use this port suffer.
+			s.log.Warn("cannot listen on an extra HTTPS port", "port", p, "err", err)
+			continue
+		}
+		defer l.Close()
+		go s.acceptLoop(l, s.handleExtraTLS(p))
+	}
 
 	plain := &http.Server{
 		Handler:           s.plainHandler(),

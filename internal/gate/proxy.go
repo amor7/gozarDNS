@@ -28,7 +28,7 @@ func (gt *Gate) handleTLS(c net.Conn) {
 		gt.portalL.Push(pc)
 		return
 	}
-	gt.carry(pc, name, gt.g.HubHTTPSPort)
+	gt.carry(pc, name, gt.g.HubHTTPSPort, 443)
 }
 
 // handleHTTP does the same for plain HTTP. Console game downloads travel
@@ -44,10 +44,24 @@ func (gt *Gate) handleHTTP(c net.Conn) {
 		pc.Close()
 		return
 	}
-	gt.carry(pc, host, gt.g.HubHTTPPort)
+	gt.carry(pc, host, gt.g.HubHTTPPort, 80)
 }
 
-func (gt *Gate) carry(c net.Conn, name string, port int) {
+// handleExtraTLS carries one of the alternative HTTPS ports to the same port.
+func (gt *Gate) handleExtraTLS(port int) func(net.Conn) {
+	return func(c net.Conn) {
+		name, pc, err := netx.PeekSNI(c, peekTimeout)
+		if err != nil {
+			c.Close()
+			return
+		}
+		gt.carry(pc, name, port, port)
+	}
+}
+
+// carry takes a customer connection to the hub: to hubPort when connecting
+// directly, or as a stream for the service port when tunnelling.
+func (gt *Gate) carry(c net.Conn, name string, hubPort, service int) {
 	ip := netx.RemoteAddr(c)
 	cl, set, allowed := gt.state.who(ip)
 	if !allowed {
@@ -64,17 +78,12 @@ func (gt *Gate) carry(c net.Conn, name string, port int) {
 	var up net.Conn
 	var err error
 	if gt.state.useTunnel() {
-		// The stream names the service port, not the port the hub listens on.
-		service := 80
-		if port == gt.g.HubHTTPSPort {
-			service = 443
-		}
 		if up, err = gt.tun.dial(name, service); err != nil {
 			gt.log.Debug("tunnel unavailable, going direct", "name", name, "err", err)
 		}
 	}
 	if up == nil {
-		up, err = net.DialTimeout("tcp4", net.JoinHostPort(gt.hubAddr, strconv.Itoa(port)), dialTimeout)
+		up, err = net.DialTimeout("tcp4", net.JoinHostPort(gt.hubAddr, strconv.Itoa(hubPort)), dialTimeout)
 		if err != nil {
 			gt.log.Debug("hub unreachable", "err", err)
 			c.Close()

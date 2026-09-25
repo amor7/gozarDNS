@@ -22,6 +22,25 @@ const (
 	PathHello  = "/v1/hello"
 )
 
+// ExtraTLSPorts are carried like 443 besides it: the alternative HTTPS ports
+// some services connect on - Discord's voice servers, for one, use 2053 and
+// 2083. Both gate and hub listen on them. Nothing else ever is, so neither
+// can be used to reach arbitrary ports.
+var ExtraTLSPorts = []int{2053, 2083, 2087, 2096}
+
+// ServicePort reports whether p is a port the proxy may carry.
+func ServicePort(p int) bool {
+	if p == 80 || p == 443 {
+		return true
+	}
+	for _, x := range ExtraTLSPorts {
+		if x == p {
+			return true
+		}
+	}
+	return false
+}
+
 // Headers the gate sets on portal calls it forwards. The hub trusts them only
 // on a request that carries a valid gate credential.
 const (

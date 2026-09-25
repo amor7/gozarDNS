@@ -168,7 +168,7 @@ func setupHub(cfgPath string) error {
 		lines = append(lines, "", yellow("  Your browser will warn about the certificate: it is self-signed."), dim("  That is expected without a domain. Continue past the warning."))
 	}
 	lines = append(lines, "", bold("Open these ports")+dim(" in your provider's firewall:"),
-		fmt.Sprintf("  tcp 80, 443, %d (gates), %d (console)", h.ControlPort, h.AdminPort))
+		fmt.Sprintf("  tcp 80, 443, 2053, 2083, 2087, 2096, %d (gates), %d (console)", h.ControlPort, h.AdminPort))
 	box("Hub is ready", lines)
 	if token != "" {
 		fmt.Println()
@@ -327,7 +327,7 @@ func setupGate(cfgPath string) error {
 		"  " + cyan(portal),
 		"",
 		bold("Open these ports") + dim(" in your provider's firewall:"),
-		"  udp+tcp 53, tcp 80, 443, 8443, udp 3478",
+		"  udp+tcp 53, tcp 80, 443, 8443, 2053, 2083, 2087, 2096, udp 3478",
 		"",
 		dim("The gate serves everyone until the first customer registers,"),
 		dim("then only registered addresses. Change that per gate in the console."),

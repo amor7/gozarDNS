@@ -23,14 +23,15 @@ func (s *Hub) tunnel(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	host, port, err := net.SplitHostPort(r.Header.Get(proto.HeaderTarget))
-	if err != nil || !rules.ValidDomain(host) || (port != "443" && port != "80") {
+	n, _ := strconv.Atoi(port)
+	if err != nil || !rules.ValidDomain(host) || !proto.ServicePort(n) {
 		http.Error(w, "bad target", http.StatusBadRequest)
 		return
 	}
 	ctx, cancel := context.WithTimeout(r.Context(), 12*time.Second)
 	var up net.Conn
-	if port == "443" {
-		up, err = s.dialOut(ctx, host, "443")
+	if port != "80" {
+		up, err = s.dialOut(ctx, host, port)
 	} else {
 		// Plain HTTP goes through the hub's own port-80 handler, which
 		// knows which hosts may be forwarded and which only redirected.

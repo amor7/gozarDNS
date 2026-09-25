@@ -21,6 +21,7 @@ import (
 	"github.com/amor7/gozarDNS/internal/config"
 	"github.com/amor7/gozarDNS/internal/dnsd"
 	"github.com/amor7/gozarDNS/internal/netx"
+	"github.com/amor7/gozarDNS/internal/proto"
 	"github.com/amor7/gozarDNS/internal/resolver"
 	"github.com/amor7/gozarDNS/internal/stun"
 	"github.com/amor7/gozarDNS/internal/sysmetrics"
@@ -138,6 +139,16 @@ func (gt *Gate) Run(ctx context.Context) error {
 		return fmt.Errorf("listening on %s: %w", gt.g.HTTPListen, err)
 	}
 	go gt.acceptLoop(httpsL, gt.handleTLS)
+	host, _, _ := net.SplitHostPort(gt.g.HTTPSListen)
+	for _, p := range proto.ExtraTLSPorts {
+		l, err := net.Listen("tcp", net.JoinHostPort(host, strconv.Itoa(p)))
+		if err != nil {
+			gt.log.Warn("cannot listen on an extra HTTPS port", "port", p, "err", err)
+			continue
+		}
+		defer l.Close()
+		go gt.acceptLoop(l, gt.handleExtraTLS(p))
+	}
 	go gt.acceptLoop(httpL, gt.handleHTTP)
 
 	// The portal: through 443 when its domain is asked for, and always on

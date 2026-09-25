@@ -90,6 +90,7 @@ That's it. Open the console, adjust the two starter plans, and send customers th
 |---|---|---|
 | **53** udp+tcp | DNS for customers | — |
 | **80, 443** tcp | proxied traffic, customer portal (by domain) | egress, answering gates only; console (by domain) |
+| **2053, 2083, 2087, 2096** tcp | alternative HTTPS ports (Discord voice uses these) | same, answering gates only |
 | **8443** tcp | customer portal by IP | — |
 | **3478** udp | STUN for console NAT detection | — |
 | **7443** tcp | — | gate sync API |

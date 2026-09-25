@@ -7,11 +7,13 @@ import (
 	"net/http"
 	"net/http/httputil"
 	"net/netip"
+	"strconv"
 	"strings"
 	"time"
 
 	"github.com/amor7/gozarDNS/internal/config"
 	"github.com/amor7/gozarDNS/internal/netx"
+	"github.com/amor7/gozarDNS/internal/proto"
 	"github.com/amor7/gozarDNS/internal/rules"
 )
 
@@ -39,7 +41,29 @@ func hasSuffix(name string, list []string) bool {
 
 // handleTLS: the admin console when its domain is asked for; otherwise a
 // gate's customer connection, carried to the name in the ClientHello.
-func (s *Hub) handleTLS(c net.Conn) {
+func (s *Hub) handleTLS(c net.Conn) { s.handleTLSOn(c, 443) }
+
+// handleExtraTLS carries an alternative HTTPS port. Only gates, and only to
+// the same port on the named host.
+func (s *Hub) handleExtraTLS(port int) func(net.Conn) {
+	return func(c net.Conn) {
+		name, pc, err := netx.PeekSNI(c, 10*time.Second)
+		if err != nil || !s.isGate(netx.RemoteAddr(c).String()) {
+			c.Close()
+			return
+		}
+		up, err := s.dialOut(context.Background(), name, strconv.Itoa(port))
+		if err != nil {
+			c.Close()
+			return
+		}
+		s.openConns.Add(1)
+		defer s.openConns.Add(-1)
+		netx.Pipe(pc, up, netx.Counter{}, nil, 10*time.Minute)
+	}
+}
+
+func (s *Hub) handleTLSOn(c net.Conn, _ int) {
 	name, pc, err := netx.PeekSNI(c, 10*time.Second)
 	if err != nil {
 		c.Close()
@@ -110,10 +134,11 @@ func (s *Hub) dialOut(ctx context.Context, name, port string) (net.Conn, error) 
 }
 
 func portNum(p string) uint16 {
-	if p == "80" {
-		return 80
+	n, err := strconv.Atoi(p)
+	if err != nil || !proto.ServicePort(n) {
+		return 443
 	}
-	return 443
+	return uint16(n)
 }
 
 // plainHandler serves the hub's port 80: console downloads forwarded as HTTP,
