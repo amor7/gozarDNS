@@ -242,23 +242,25 @@ export function Progress({ value, max, className, tone }: { value: number; max: 
 }
 
 /** A donut gauge. */
-export function Ring({ value, max, size = 180, stroke = 14, children }: { value: number; max: number; size?: number; stroke?: number; children?: ReactNode }) {
+export type RingTone = "primary" | "warning" | "danger";
+
+export function Ring({ value, max, tone = "primary", size = 180, stroke = 14, children }: { value: number; max: number; tone?: RingTone; size?: number; stroke?: number; children?: ReactNode }) {
   const r = (size - stroke) / 2;
   const c = 2 * Math.PI * r;
-  const pct = max > 0 ? Math.min(1, value / max) : 0;
-  const danger = pct >= 0.95;
-  const warn = pct >= 0.8;
-  const id = `ring-${size}-${stroke}`;
+  const pct = max > 0 ? Math.min(1, Math.max(0, value / max)) : 0;
+  const from = tone === "primary" ? "var(--primary)" : `var(--${tone})`;
+  const to = tone === "primary" ? "var(--primary-2)" : `var(--${tone})`;
+  const id = `ring-${size}-${stroke}-${tone}`;
   return (
     <div className="relative inline-grid place-items-center" style={{ width: size, height: size }}>
       <svg width={size} height={size} className="-rotate-90">
         <defs>
           <linearGradient id={id} x1="0" y1="0" x2="1" y2="1">
-            <stop offset="0" stopColor={danger ? "var(--danger)" : warn ? "var(--warning)" : "var(--primary)"} />
-            <stop offset="1" stopColor={danger ? "var(--danger)" : warn ? "var(--warning)" : "var(--primary-2)"} />
+            <stop offset="0" stopColor={from} />
+            <stop offset="1" stopColor={to} />
           </linearGradient>
         </defs>
-        <circle cx={size / 2} cy={size / 2} r={r} fill="none" stroke="var(--surface-3)" strokeWidth={stroke} />
+        <circle cx={size / 2} cy={size / 2} r={r} fill="none" stroke={tone === "primary" ? "var(--surface-3)" : from} strokeOpacity={tone === "primary" ? 1 : 0.22} strokeWidth={stroke} />
         <circle
           cx={size / 2}
           cy={size / 2}
@@ -269,6 +271,7 @@ export function Ring({ value, max, size = 180, stroke = 14, children }: { value:
           strokeLinecap="round"
           strokeDasharray={c}
           strokeDashoffset={c * (1 - pct)}
+          opacity={pct > 0 ? 1 : 0}
           style={{ transition: "stroke-dashoffset 1s cubic-bezier(.2,.8,.2,1)" }}
         />
       </svg>

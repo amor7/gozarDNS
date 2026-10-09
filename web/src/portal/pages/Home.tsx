@@ -98,18 +98,32 @@ function UsageCard({ me }: { me: Me }) {
   const left = Math.max(0, u.quota_bytes - u.used_bytes);
   const [v, unit] = bytesParts(unlimited ? u.used_bytes : left, lang);
   const days = daysLeft(u.expires_at);
+  // What ran out decides the ring: data (or both) red, time alone yellow.
+  const dataOut = !unlimited && left <= 0;
+  const timeOut = u.state === "expired" || (u.expires_at !== null && u.expires_at * 1000 <= Date.now());
+  const ended = u.state === "disabled" ? "disabled" : dataOut && timeOut ? "both" : dataOut ? "data" : timeOut ? "time" : null;
+  const tone = ended === "time" ? "warning" : ended ? "danger" : "primary";
   const periodDays = u.expires_at && u.period_start ? Math.max(1, Math.round((u.expires_at - u.period_start) / 86400)) : 0;
 
   return (
     <Card className="lg:col-span-3 p-5 sm:p-6 relative overflow-hidden flex flex-col">
       <div className="absolute -top-24 -end-24 size-64 rounded-full gradient-bg opacity-[0.08] blur-2xl pointer-events-none" />
       <div className="flex-1 flex flex-col sm:flex-row items-center gap-6 sm:gap-8">
-        <Ring value={unlimited ? 0 : u.used_bytes} max={unlimited ? 1 : u.quota_bytes} size={188} stroke={15}>
-          <div>
-            <div className="text-[34px] font-black tracking-tight num leading-none">{v}</div>
-            <div className="text-sm text-muted mt-1">{unit}</div>
-            <div className="text-xs text-faint mt-1.5">{unlimited ? t("home.used") : t("home.left")}</div>
-          </div>
+        <Ring value={unlimited ? 1 : left} max={unlimited ? 1 : u.quota_bytes} tone={tone} size={188} stroke={15}>
+          {ended ? (
+            <div className="px-6">
+              <div className={cn("font-extrabold leading-snug", tone === "warning" ? "text-warning" : "text-danger")}>{t("home.ring." + ended)}</div>
+              {ended === "time" && !unlimited && (
+                <div className="text-xs text-muted mt-1.5 num">{t("home.ring.kept", { v: bytes(left, lang) })}</div>
+              )}
+            </div>
+          ) : (
+            <div>
+              <div className="text-[34px] font-black tracking-tight num leading-none">{v}</div>
+              <div className="text-sm text-muted mt-1">{unit}</div>
+              <div className="text-xs text-faint mt-1.5">{unlimited ? t("home.used") : t("home.left")}</div>
+            </div>
+          )}
         </Ring>
         <div className="flex-1 w-full grid grid-cols-2 gap-3">
           <MiniStat icon={<Gauge className="size-4" />} label={t("home.used")} value={bytes(u.used_bytes, lang)} sub={unlimited ? t("home.unlimited") : t("home.of", { total: bytes(u.quota_bytes, lang) })} />
