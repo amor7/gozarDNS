@@ -208,6 +208,28 @@
    ]
   },
   {
+   "id": "photon",
+   "name": {
+    "fa": "Photon Engine",
+    "en": "Photon Engine"
+   },
+   "category": "games",
+   "color": "#004480",
+   "groups": [
+    {
+     "id": "main",
+     "name": {
+      "fa": "سایت، داشبورد و حساب",
+      "en": "Website, dashboard & account"
+     },
+     "heavy": false,
+     "domains": [
+      "photonengine.com"
+     ]
+    }
+   ]
+  },
+  {
    "id": "ea",
    "name": {
     "fa": "EA",

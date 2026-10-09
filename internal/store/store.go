@@ -240,6 +240,12 @@ ALTER TABLE payments ADD COLUMN track_id TEXT NOT NULL DEFAULT '';
 	`
 ALTER TABLE gates ADD COLUMN tunnel TEXT NOT NULL DEFAULT 'off';
 `,
+	// 4: Photon Engine joined the catalog; existing plans get it too
+	`
+UPDATE plans SET groups_json = json_insert(groups_json, '$[#]', 'photon/main')
+WHERE json_valid(groups_json)
+  AND NOT EXISTS (SELECT 1 FROM json_each(plans.groups_json) WHERE value = 'photon/main');
+`,
 }
 
 func (s *Store) migrate() error {

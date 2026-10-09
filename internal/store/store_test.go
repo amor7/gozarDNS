@@ -147,3 +147,24 @@ func TestBackupRoundTrip(t *testing.T) {
 		t.Fatal(err)
 	}
 }
+
+func TestPhotonMigrationAddsToEveryPlanOnce(t *testing.T) {
+	s := open(t)
+	p := &Plan{Name: "old", DurationDays: 30, MaxDevices: 1, Groups: []string{"steam/main"}}
+	if err := s.SavePlan(p); err != nil {
+		t.Fatal(err)
+	}
+	// Run the step as an upgrade would, twice: it must add Photon once.
+	for range 2 {
+		if _, err := s.db.Exec(migrations[3]); err != nil {
+			t.Fatal(err)
+		}
+	}
+	got, err := s.Plan(p.ID)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if len(got.Groups) != 2 || got.Groups[0] != "steam/main" || got.Groups[1] != "photon/main" {
+		t.Fatalf("groups = %v", got.Groups)
+	}
+}
