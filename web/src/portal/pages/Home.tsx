@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { Link } from "react-router";
-import { BarChart3, CalendarClock, CircleAlert, CircleCheck, Gauge, Headset, Hourglass, Laptop, MonitorSmartphone, Pencil, Plus, Radar, RefreshCw, ShieldAlert, Trash2, TrendingUp, TriangleAlert, Wifi, Zap } from "lucide-react";
+import { Activity, BarChart3, CalendarClock, CircleAlert, CircleCheck, Gauge, Headset, Laptop, MonitorSmartphone, Pencil, Plus, Radar, RefreshCw, ShieldAlert, Trash2, TrendingUp, TriangleAlert, Wifi, Zap } from "lucide-react";
 import { api } from "@shared/api";
 import { useI18n } from "@shared/i18n";
 import { bytes, bytesParts, date, daysLeft, num, relative, shortDate, speed } from "@shared/format";
@@ -124,29 +124,22 @@ function UsageCard({ me }: { me: Me }) {
           <MiniStat icon={<MonitorSmartphone className="size-4" />} label={t("home.devices")} value={t("dev.count", { n: num(me.devices.length, lang), max: num(u.max_devices, lang) })} />
         </div>
       </div>
-      <UsagePace me={me} left={unlimited ? null : left} days={days} />
+      <UsagePace me={me} />
     </Card>
   );
 }
 
-/** Recent pace under the ring: what the last week used and how long the
- *  remaining data lasts at that rate. Fills the card's lower half on wide
- *  screens, where the column beside it is taller. */
-function UsagePace({ me, left, days }: { me: Me; left: number | null; days: number | null }) {
+/** Recent usage under the ring: today, the last week and its daily
+ *  average. Fills the card's lower half on wide screens, where the column
+ *  beside it is taller. The usage series always ends with today. */
+function UsagePace({ me }: { me: Me }) {
   const { t, lang } = useI18n();
+  const today = me.usage.at(-1)?.bytes ?? 0;
   const week = me.usage.slice(-7).reduce((s, d) => s + d.bytes, 0);
-  const avg = week / 7;
-  let lasts: string;
-  if (left === null) lasts = t("home.unlimited");
-  else if (avg < 1) lasts = "—";
-  else {
-    const n = Math.floor(left / avg);
-    lasts = days !== null && n >= days ? t("home.pace.enough") : t("home.pace.days", { n: num(n, lang) });
-  }
   const items = [
+    { icon: <Activity className="size-4" />, label: t("home.pace.today"), value: bytes(today, lang) },
     { icon: <BarChart3 className="size-4" />, label: t("home.pace.week"), value: bytes(week, lang) },
-    { icon: <TrendingUp className="size-4" />, label: t("home.pace.avg"), value: bytes(avg, lang) },
-    { icon: <Hourglass className="size-4" />, label: t("home.pace.lasts"), value: lasts },
+    { icon: <TrendingUp className="size-4" />, label: t("home.pace.avg"), value: bytes(week / 7, lang) },
   ];
   return (
     <div className="mt-6 pt-5 border-t border-line flex flex-col sm:flex-row sm:items-center gap-4">
