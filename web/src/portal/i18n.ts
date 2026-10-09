@@ -95,6 +95,11 @@ const fa = {
   "home.alert.soon.t": "دوره‌تان به‌زودی تمام می‌شود",
   "home.alert.soon.s": "فقط {days} روز مانده.",
   "home.renew": "تمدید",
+  "home.pace.week": "۷ روز اخیر",
+  "home.pace.avg": "میانگین روزانه",
+  "home.pace.lasts": "کافی برای",
+  "home.pace.days": "حدود {n} روز",
+  "home.pace.enough": "تا پایان دوره",
   "home.choose": "انتخاب پلن",
 
   "conn.title": "همین اتصال",
@@ -325,6 +330,11 @@ const en: typeof fa = {
   "home.alert.soon.t": "Your period ends soon",
   "home.alert.soon.s": "Only {days} days left.",
   "home.renew": "Renew",
+  "home.pace.week": "Last 7 days",
+  "home.pace.avg": "Daily avg",
+  "home.pace.lasts": "Lasts",
+  "home.pace.days": "about {n} days",
+  "home.pace.enough": "to period end",
   "home.choose": "Choose a plan",
 
   "conn.title": "This connection",

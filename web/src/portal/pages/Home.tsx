@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { Link } from "react-router";
-import { CalendarClock, CircleAlert, CircleCheck, Gauge, Headset, Laptop, MonitorSmartphone, Pencil, Plus, Radar, RefreshCw, ShieldAlert, Trash2, TriangleAlert, Wifi, Zap } from "lucide-react";
+import { BarChart3, CalendarClock, CircleAlert, CircleCheck, Gauge, Headset, Hourglass, Laptop, MonitorSmartphone, Pencil, Plus, Radar, RefreshCw, ShieldAlert, Trash2, TrendingUp, TriangleAlert, Wifi, Zap } from "lucide-react";
 import { api } from "@shared/api";
 import { useI18n } from "@shared/i18n";
 import { bytes, bytesParts, date, daysLeft, num, relative, shortDate, speed } from "@shared/format";
@@ -101,9 +101,9 @@ function UsageCard({ me }: { me: Me }) {
   const periodDays = u.expires_at && u.period_start ? Math.max(1, Math.round((u.expires_at - u.period_start) / 86400)) : 0;
 
   return (
-    <Card className="lg:col-span-3 p-5 sm:p-6 relative overflow-hidden">
+    <Card className="lg:col-span-3 p-5 sm:p-6 relative overflow-hidden flex flex-col">
       <div className="absolute -top-24 -end-24 size-64 rounded-full gradient-bg opacity-[0.08] blur-2xl pointer-events-none" />
-      <div className="flex flex-col sm:flex-row items-center gap-6 sm:gap-8">
+      <div className="flex-1 flex flex-col sm:flex-row items-center gap-6 sm:gap-8">
         <Ring value={unlimited ? 0 : u.used_bytes} max={unlimited ? 1 : u.quota_bytes} size={188} stroke={15}>
           <div>
             <div className="text-[34px] font-black tracking-tight num leading-none">{v}</div>
@@ -124,7 +124,49 @@ function UsageCard({ me }: { me: Me }) {
           <MiniStat icon={<MonitorSmartphone className="size-4" />} label={t("home.devices")} value={t("dev.count", { n: num(me.devices.length, lang), max: num(u.max_devices, lang) })} />
         </div>
       </div>
+      <UsagePace me={me} left={unlimited ? null : left} days={days} />
     </Card>
+  );
+}
+
+/** Recent pace under the ring: what the last week used and how long the
+ *  remaining data lasts at that rate. Fills the card's lower half on wide
+ *  screens, where the column beside it is taller. */
+function UsagePace({ me, left, days }: { me: Me; left: number | null; days: number | null }) {
+  const { t, lang } = useI18n();
+  const week = me.usage.slice(-7).reduce((s, d) => s + d.bytes, 0);
+  const avg = week / 7;
+  let lasts: string;
+  if (left === null) lasts = t("home.unlimited");
+  else if (avg < 1) lasts = "—";
+  else {
+    const n = Math.floor(left / avg);
+    lasts = days !== null && n >= days ? t("home.pace.enough") : t("home.pace.days", { n: num(n, lang) });
+  }
+  const items = [
+    { icon: <BarChart3 className="size-4" />, label: t("home.pace.week"), value: bytes(week, lang) },
+    { icon: <TrendingUp className="size-4" />, label: t("home.pace.avg"), value: bytes(avg, lang) },
+    { icon: <Hourglass className="size-4" />, label: t("home.pace.lasts"), value: lasts },
+  ];
+  return (
+    <div className="mt-6 pt-5 border-t border-line flex flex-col sm:flex-row sm:items-center gap-4">
+      <div className="flex-1 grid grid-cols-3 gap-3">
+        {items.map((x) => (
+          <div key={x.label} className="min-w-0">
+            <div className="flex items-center gap-1.5 text-xs text-muted font-medium">
+              <span className="text-primary">{x.icon}</span>
+              <span className="leading-tight">{x.label}</span>
+            </div>
+            <div className="font-bold mt-1 num truncate">{x.value}</div>
+          </div>
+        ))}
+      </div>
+      {me.plan && (
+        <Link to="/plans" className="shrink-0">
+          <Button variant="soft" className="w-full sm:w-auto" icon={<RefreshCw className="size-4" />}>{t("home.renew")}</Button>
+        </Link>
+      )}
+    </div>
   );
 }
 
