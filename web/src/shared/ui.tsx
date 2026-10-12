@@ -251,6 +251,11 @@ export function Ring({ value, max, tone = "primary", size = 180, stroke = 14, ch
   const from = tone === "primary" ? "var(--primary)" : `var(--${tone})`;
   const to = tone === "primary" ? "var(--primary-2)" : `var(--${tone})`;
   const id = `ring-${size}-${stroke}-${tone}`;
+  // Round caps reach stroke/2 past each end of the arc, which hid small gaps
+  // (2 GB used of 150 still looked full). Draw the arc shorter by the caps,
+  // start it half a cap late, and keep any gap at least a little visible.
+  const minGap = stroke * 0.7;
+  const arc = pct >= 1 ? c : Math.max(0, Math.min(pct * c - stroke, c - stroke - minGap));
   return (
     <div className="relative inline-grid place-items-center" style={{ width: size, height: size }}>
       <svg width={size} height={size} className="-rotate-90">
@@ -269,10 +274,10 @@ export function Ring({ value, max, tone = "primary", size = 180, stroke = 14, ch
           stroke={`url(#${id})`}
           strokeWidth={stroke}
           strokeLinecap="round"
-          strokeDasharray={c}
-          strokeDashoffset={c * (1 - pct)}
+          strokeDasharray={`${arc} ${c}`}
+          strokeDashoffset={pct >= 1 ? 0 : -stroke / 2}
           opacity={pct > 0 ? 1 : 0}
-          style={{ transition: "stroke-dashoffset 1s cubic-bezier(.2,.8,.2,1)" }}
+          style={{ transition: "stroke-dasharray 1s cubic-bezier(.2,.8,.2,1)" }}
         />
       </svg>
       <div className="absolute inset-0 grid place-items-center text-center">{children}</div>
